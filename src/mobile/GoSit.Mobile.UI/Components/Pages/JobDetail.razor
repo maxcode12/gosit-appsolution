@@ -1,0 +1,220 @@
+@page "/jobs/{BookingId:guid}"
+@inject BookingService Bookings
+@inject NavigationManager Nav
+
+@*
+    One job, and the button for it.
+
+    Ordered by what someone needs at the door: the action, then where and when, then who
+    they are looking after, then the family's notes, then money. Money is last on purpose
+    — it is the least urgent thing on a doorstep and the most distracting.
+*@
+
+<AppShell Title="@(_booking?.CareServiceName ?? "Job")"
+          Subtitle="@(_booking is null ? null : $"for {_booking.CareRequesterFirstName}")">
+
+    <a href="/jobs" class="small muted"
+       style="display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;min-height:44px">
+        <Icon Name="back" Size="18" /> All work
+    </a>
+
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_booking is null)
+    {
+        <div class="empty">That job could not be found.</div>
+    }
+    else
+    {
+        <div style="margin:.75rem 0 1rem">
+            <span class="@Format.StatusPill(_booking.Status)">@Format.Status(_booking.Status)</span>
+        </div>
+
+        @if (_booking.Status is "Pending" or "Accepted" or "InProgress")
+        {
+            <div class="card card--focus">
+                <BookingAction Booking="_booking" OnChanged="Reload" OnDeep="true" />
+            </div>
+        }
+
+        <div class="card">
+            <div class="card__row">
+                <Icon Name="clock" Size="20" />
+                <span>@Format.Window(_booking)</span>
+            </div>
+            <div class="card__row">
+                <Icon Name="pin" Size="20" />
+                @if (_booking.Address is { } address)
+                {
+                    <span>@Format.Address(address)</span>
+                }
+                else
+                {
+                    @* Only the area until the job is accepted: a request is not consent to
+                       learn where a family lives, and the API does not send it. *@
+                    <span>@_booking.Area.City, @_booking.Area.Province · exact address shared when you accept</span>
+                }
+            </div>
+
+            @if (_booking.CheckedInAtUtc is { } checkedIn)
+            {
+                <div class="card__row">
+                    <Icon Name="check" Size="20" />
+                    <span>
+                        Checked in at @Format.LocalTimeOf(checkedIn)
+                        @if (_booking.CheckedOutAtUtc is { } checkedOut)
+                        {
+                            @($", out at {Format.LocalTimeOf(checkedOut)}")
+                        }
+                    </span>
+                </div>
+
+                @if (Format.Arrival(_booking.CheckInVerification) is { } arrival)
+                {
+                    <p class="small muted" style="margin:.25rem 0 0 1.875rem">@arrival</p>
+                }
+            }
+        </div>
+
+        <div class="card">
+            <p class="card__label">@(_booking.Pets.Count > 0 ? "Pets you are looking after" : "Who you are looking after")</p>
+            <div class="stack" style="margin-top:.5rem;gap:.25rem">
+                @foreach (var recipient in _booking.Recipients)
+                {
+                    <div>
+                        <strong>@recipient.FirstName</strong>
+                        <span class="muted small">
+                            · @recipient.Age · @recipient.RecipientType
+                        </span>
+                        @if (recipient.HasRecordedCareNeeds)
+                        {
+                            @* What exists, never what it says. Care needs are read from
+                               their own endpoint, which checks the booking grants access. *@
+                            <span class="muted small"> · care needs recorded</span>
+                        }
+                    </div>
+                }
+                @foreach (var pet in _booking.Pets)
+                {
+                    <div>
+                        <strong>@pet.Name</strong>
+                        <span class="muted small"> · @Format.Pet(pet)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_booking.Instructions))
+        {
+            <div class="card">
+                <p class="card__label">From the family</p>
+                <p style="margin:.5rem 0 0;white-space:pre-wrap">@_booking.Instructions</p>
+            </div>
+        }
+
+        @foreach (var pet in _booking.Pets)
+        {
+            if (pet.CareNotes is not { } notes)
+            {
+                continue;
+            }
+
+            @* Temperament first: "reactive to other dogs" matters in the first ten seconds. *@
+            <div class="card">
+                <p class="card__label">Looking after @pet.Name</p>
+                @foreach (var (label, value) in new[]
+                {
+                    ("Temperament", notes.Behaviour),
+                    ("Feeding", notes.FeedingInstructions),
+                    ("Medication", notes.Medication),
+                    ("Vet", notes.VetClinic),
+                    ("Anything else", notes.OtherNotes),
+                })
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                    {
+                        continue;
+                    }
+
+                    <p class="small muted" style="margin:.5rem 0 0">@label</p>
+                    <p style="margin:.125rem 0 0;white-space:pre-wrap">@value</p>
+                }
+            </div>
+        }
+
+        <div class="card">
+            <p class="card__label">Pay</p>
+            <p style="margin:.5rem 0 0">
+                @if (_booking.PricingUnit == "Nightly" && _booking.NightlyRate is { } nightly)
+                {
+                    @($"{Format.Money(nightly)} a night · ")
+                }
+                else
+                {
+                    @($"{Format.Money(_booking.HourlyRate)} an hour · ")
+                }
+                @if (_booking.ActualTotal is { } actual)
+                {
+                    <strong>@Format.Money(actual)</strong>
+                    <span class="muted">@(_booking.PricingUnit == "Nightly" ? " for the nights stayed" : " for the hours worked")</span>
+                }
+                else
+                {
+                    <span>@Format.Money(_booking.EstimatedTotal) expected</span>
+                }
+            </p>
+            <p class="small muted" style="margin:.375rem 0 0">
+                Before GoSit's fee, which comes off when you are paid out.
+            </p>
+        </div>
+    }
+</AppShell>
+
+@code {
+    [Parameter] public Guid BookingId { get; set; }
+
+    private MobileBooking? _booking;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override Task OnParametersSetAsync() => Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _booking = await Bookings.GetAsync(BookingId);
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
+        {
+            // The API answers 404 rather than 403 for a booking that is not yours, so ids
+            // cannot be probed. Both land here, which is the point.
+            _booking = null;
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

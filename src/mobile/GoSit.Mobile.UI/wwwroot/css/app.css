@@ -1,0 +1,354 @@
+/*
+ * Go Sit mobile.
+ *
+ * Written for a phone held in one hand, which drives most of what follows:
+ *
+ *   - Everything tappable is at least 44px. That is not a style preference, it is the
+ *     smallest target a thumb hits reliably, and this app is used standing on a doorstep.
+ *   - Navigation sits at the bottom, where a thumb reaches. A top tab bar looks tidier in
+ *     a screenshot and is unusable on a large phone.
+ *   - Safe-area insets everywhere. A check-in button behind the home indicator is a
+ *     button that does not get pressed.
+ *   - No hover states carry meaning. There is no hover on a phone.
+ *
+ * Colours, radii and shadows come from tokens.css, shared with the web app.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Stops iOS inflating text in landscape and breaking the layout. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-role-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+
+  /* The app owns its scrolling; the document bouncing behind it reads as a bug. */
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-role-heading), system-ui, sans-serif;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ---- App frame ---------------------------------------------------------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.app__body {
+  flex: 1;
+  /* Clears the tab bar plus the home indicator, so the last card is never trapped. */
+  padding: 0 1rem calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.app__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: calc(env(safe-area-inset-top) + 1rem) 1rem 0.75rem;
+  background: color-mix(in srgb, var(--color-canvas) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.app__title {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.app__subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+/* ---- Bottom navigation -------------------------------------------------- */
+
+.tabs {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 20;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--color-border);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.25rem;
+  min-height: 48px;
+  border-radius: var(--radius-control);
+  color: var(--color-text-muted);
+  font-family: var(--font-role-control), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab.active {
+  color: var(--color-brand-primary);
+}
+
+.tab__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- Cards -------------------------------------------------------------- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  box-shadow: var(--gosit-shadow-sm);
+}
+
+.card + .card {
+  margin-top: 0.75rem;
+}
+
+.card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/*
+ * The one job that needs doing now, given the weight to match. A caregiver opening this
+ * app on a doorstep has exactly one question, and it should not be a scroll away.
+ */
+.card--focus {
+  background: var(--color-brand-deep);
+  border-color: transparent;
+  color: var(--color-text-on-deep);
+}
+
+.card--focus .card__meta,
+.card--focus .card__label {
+  color: color-mix(in srgb, var(--color-text-on-deep) 78%, transparent);
+}
+
+.card__label {
+  font-family: var(--font-role-control), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.card__title {
+  margin: 0.375rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.card__meta {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+}
+
+.card__row svg {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  /* 52px: comfortably past the 44px floor, because these are pressed in a hurry. */
+  min-height: 52px;
+  padding: 0 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-family: var(--font-role-control), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--duration-fast) var(--ease-out-soft), opacity var(--duration-fast);
+}
+
+/* Presses register as a nudge. On a phone this is the only feedback there is. */
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--primary {
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  box-shadow: var(--gosit-shadow-brand);
+}
+
+.btn--secondary {
+  background: var(--color-brand-secondary);
+  color: var(--color-text-on-brand);
+}
+
+.btn--quiet {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.btn--onDeep {
+  background: var(--color-surface);
+  color: var(--color-brand-deep);
+}
+
+/* ---- Form fields -------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.field__label {
+  font-family: var(--font-role-control), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.field__input {
+  min-height: 52px;
+  padding: 0 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-field);
+  color: var(--color-text-primary);
+  /* 16px exactly: anything smaller makes iOS zoom the page on focus. */
+  font-size: 16px;
+}
+
+.field__input:focus {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 1px;
+}
+
+/* ---- Status pills ------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-role-control), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill--live { background: var(--color-brand-soft); color: var(--color-brand-primary); }
+.pill--wait { background: var(--color-accent-soft); color: var(--color-brand-secondary); }
+.pill--done { background: var(--color-success-soft); color: var(--color-success-accent); }
+.pill--off  { background: var(--color-surface-muted); color: var(--color-text-secondary); }
+
+/* ---- Feedback ----------------------------------------------------------- */
+
+.notice {
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-control);
+  font-size: 0.9375rem;
+}
+
+.notice--error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-accent);
+}
+
+.notice--quiet {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+
+.empty {
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-card);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.stack { display: flex; flex-direction: column; gap: 0.75rem; }
+.muted { color: var(--color-text-secondary); }
+.small { font-size: 0.875rem; }
+
+/* ---- Blazor's own error strip ------------------------------------------- */
+
+#blazor-error-ui {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 1000;
+  display: none;
+  padding: 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: var(--color-danger-soft);
+  color: var(--color-danger-accent);
+}
+
+/*
+ * Blazor's FocusOnNavigate moves focus to the page heading on every navigation, which is
+ * right — it is how a screen reader announces the page changed. But the browser then
+ * paints a focus ring around the heading, which reads as a stray black box around the
+ * title.
+ *
+ * Suppressed outright. The first attempt at this used :focus-visible, on the theory that
+ * keyboard users should keep the ring — but Blazor gives the heading tabindex="-1", so it
+ * cannot be tabbed to at all. A focus indicator on an element no one can reach by keyboard
+ * indicates nothing. The announcement is unaffected either way: it comes from focus
+ * moving, not from the outline being drawn.
+ */
+h1:focus {
+  outline: none;
+}

@@ -1,0 +1,187 @@
+@page "/notifications"
+@inject NotificationService NotificationsApi
+@inject SessionStore Session
+@inject NavigationManager Nav
+
+@*
+    One inbox for both sides of the app — GET /notifications already scopes to whichever
+    account is asking, so there is nothing role-specific about the data. Only the tab bar
+    underneath it needs to know which account this is.
+*@
+
+<AppShell Title="Inbox" Subtitle="@Subtitle">
+    <ChildContent>
+        @if (_loading)
+        {
+            <p class="muted">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert">@_error</div>
+        }
+        else if (_notifications.Count == 0)
+        {
+            <div class="empty">
+                <p style="margin:0 0 .25rem;font-weight:600">Nothing here yet</p>
+                <p class="small" style="margin:0">
+                    Bookings, interviews and account updates will show up here.
+                </p>
+            </div>
+        }
+        else
+        {
+            @if (_unreadCount > 0)
+            {
+                <button type="button" class="btn btn--quiet btn--block" style="margin-bottom:1rem"
+                        @onclick="MarkAllRead" disabled="@_markingAll">
+                    @(_markingAll ? "Marking…" : "Mark all as read")
+                </button>
+            }
+
+            <div class="stack">
+                @foreach (var notification in _notifications)
+                {
+                    <button type="button" class="card" style="width:100%;text-align:left;border:none;cursor:pointer;@(notification.IsRead ? "" : "border-left:3px solid var(--color-brand-primary)")"
+                            @onclick="() => Open(notification)">
+                        <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start">
+                            <div>
+                                <h3 class="card__title" style="font-size:1rem">@notification.Title</h3>
+                                @if (!string.IsNullOrWhiteSpace(notification.Body))
+                                {
+                                    <p class="card__meta" style="margin-top:.125rem">@notification.Body</p>
+                                }
+                            </div>
+                            @if (!notification.IsRead)
+                            {
+                                <span aria-hidden style="width:8px;height:8px;border-radius:999px;background:var(--color-brand-primary);flex:none;margin-top:.375rem"></span>
+                            }
+                        </div>
+                        <p class="small muted" style="margin:.5rem 0 0">
+                            @notification.CreatedAtUtc.ToLocalTime().ToString("ddd d MMM, h:mm tt")
+                        </p>
+                    </button>
+                }
+            </div>
+        }
+    </ChildContent>
+    <Tabs>
+        @if (_isFamily)
+        {
+            <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+            <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+            <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+            <Tab Href="/family/account" Icon="person" Label="Account" />
+        }
+        else
+        {
+            <Tab Href="/" Icon="today" Label="Today" Exact="true" />
+            <Tab Href="/jobs" Icon="work" Label="Work" />
+            <Tab Href="/interviews" Icon="video" Label="Interviews" />
+            <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+            <Tab Href="/earnings" Icon="money" Label="Earnings" />
+            <Tab Href="/account" Icon="person" Label="Account" />
+        }
+    </Tabs>
+</AppShell>
+
+@code {
+    private List<MobileNotification> _notifications = [];
+    private int _unreadCount;
+    private bool _isFamily;
+    private bool _loading = true;
+    private bool _markingAll;
+    private string? _error;
+
+    private string Subtitle => _loading
+        ? ""
+        : _unreadCount switch
+        {
+            0 => "You're all caught up.",
+            1 => "1 unread.",
+            _ => $"{_unreadCount} unread.",
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isFamily = await Session.GetRoleAsync() == "CareRequester";
+
+        try
+        {
+            var list = await NotificationsApi.ListAsync();
+            _notifications = list?.Notifications.ToList() ?? [];
+            _unreadCount = list?.UnreadCount ?? 0;
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Open(MobileNotification notification)
+    {
+        if (!notification.IsRead)
+        {
+            try
+            {
+                await NotificationsApi.MarkReadAsync(notification.Id);
+                notification = notification with { IsRead = true };
+                var index = _notifications.FindIndex(n => n.Id == notification.Id);
+                if (index >= 0)
+                {
+                    _notifications[index] = notification;
+                }
+                _unreadCount = Math.Max(0, _unreadCount - 1);
+            }
+            catch (Exception ex) when (ex is ApiException or HttpRequestException)
+            {
+                // Reading is a nicety here; where this taps through to is the point.
+            }
+        }
+
+        var destination = notification.RelatedEntityType switch
+        {
+            "CareBooking" when notification.RelatedEntityId is { } bookingId =>
+                _isFamily ? $"/family/bookings/{bookingId}" : $"/jobs/{bookingId}",
+            "Interview" when notification.RelatedEntityId is { } interviewId =>
+                _isFamily ? $"/family/interviews/{interviewId}" : $"/interviews/{interviewId}",
+            _ => null,
+        };
+
+        if (destination is not null)
+        {
+            Nav.NavigateTo(destination);
+        }
+    }
+
+    private async Task MarkAllRead()
+    {
+        _markingAll = true;
+
+        try
+        {
+            await NotificationsApi.MarkAllReadAsync();
+            _notifications = _notifications.Select(n => n with { IsRead = true }).ToList();
+            _unreadCount = 0;
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException)
+        {
+            _error = "Could not mark everything read. Try again.";
+        }
+        finally
+        {
+            _markingAll = false;
+        }
+    }
+}

@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/*
+ * Expose the semantic design tokens to Tailwind's utility generator so components can
+ * write `bg-brand-primary` instead of arbitrary hex values.
+ */
+@theme inline {
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-hover: var(--color-brand-primary-hover);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-brand-soft-border: var(--color-brand-soft-border);
+  --color-brand-secondary: var(--color-brand-secondary);
+  --color-brand-secondary-hover: var(--color-brand-secondary-hover);
+  --color-brand-accent: var(--color-brand-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-nav-accent: var(--color-nav-accent);
+
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-on-brand: var(--color-text-on-brand);
+  --color-text-placeholder: var(--color-text-placeholder);
+
+  --color-danger-accent: var(--color-danger-accent);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-success-accent: var(--color-success-accent);
+  --color-success-soft: var(--color-success-soft);
+
+  --color-brand-deep: var(--color-brand-deep);
+  --color-text-on-deep: var(--color-text-on-deep);
+  --color-accent-on-deep: var(--color-accent-on-deep);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-field: var(--radius-field);
+  --radius-auth-card: var(--radius-auth-card);
+
+  --shadow-xs: var(--gosit-shadow-xs);
+  --shadow-sm: var(--gosit-shadow-sm);
+  --shadow-md: var(--gosit-shadow-md);
+  --shadow-lg: var(--gosit-shadow-lg);
+  --shadow-brand: var(--gosit-shadow-brand);
+  --shadow-auth-card: var(--gosit-shadow-auth-card);
+
+  --font-sans: var(--font-role-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-role-heading), ui-sans-serif, system-ui, sans-serif;
+  --font-control: var(--font-role-control), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* A slow vertical drift for the app-showcase phone — enough to read as "alive", not enough to distract from the screen inside. */
+@keyframes phone-float {
+  0%,
+  100% {
+    transform: perspective(1200px) rotateY(-6deg) rotateX(2deg) translateY(0);
+  }
+  50% {
+    transform: perspective(1200px) rotateY(-6deg) rotateX(2deg) translateY(-10px);
+  }
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  /* Stops the two families looking like different weights of the same one. */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Headings carry the display family and a tighter fit. Set once here rather than
+ * repeated as utility classes on every heading in the app.
+ */
+h1,
+h2,
+h3 {
+  font-family: var(--font-role-heading), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* A visible, branded focus ring everywhere, rather than the browser's default. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
+ * Cards and rows that respond to a pointer. Kept as a component class because the lift
+ * is three properties that must stay in step, and repeating them invites drift.
+ */
+@utility surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--gosit-shadow-sm);
+}
+
+@utility surface-card-interactive {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--gosit-shadow-sm);
+  transition:
+    box-shadow var(--duration-base) var(--ease-out-soft),
+    transform var(--duration-base) var(--ease-out-soft),
+    border-color var(--duration-base) var(--ease-out-soft);
+
+  &:hover {
+    box-shadow: var(--gosit-shadow-md);
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+
+  &:focus-within {
+    box-shadow: var(--gosit-shadow-md);
+    border-color: var(--color-brand-soft-border);
+  }
+}

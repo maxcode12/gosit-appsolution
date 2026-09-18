@@ -1,0 +1,120 @@
+@page "/family/interviews/{InterviewId:guid}"
+@inject InterviewService Interviews
+@inject NavigationManager Nav
+
+<AppShell Title="Interview"
+          Subtitle="@(_interview is null ? null : $"with {_interview.OtherParticipantFirstName}")">
+    <ChildContent>
+        <a href="/family/interviews" class="small muted"
+           style="display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;min-height:44px">
+            <Icon Name="back" Size="18" /> All interviews
+        </a>
+
+        @if (_loading)
+        {
+            <p class="muted">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert">@_error</div>
+        }
+        else if (_interview is null)
+        {
+            <div class="empty">That interview could not be found.</div>
+        }
+        else
+        {
+            <div style="margin:.75rem 0 1rem">
+                <span class="pill pill--off">@_interview.Status</span>
+            </div>
+
+            <div class="card">
+                <div class="card__row">
+                    <Icon Name="clock" Size="20" />
+                    <span>
+                        @_interview.ScheduledStartUtc.ToLocalTime().ToString("ddd d MMM, h:mm tt")
+                        · @_interview.DurationMinutes min
+                    </span>
+                </div>
+            </div>
+
+            @if (_interview.Status == "Requested")
+            {
+                <div class="card">
+                    <p class="card__label">Waiting on @_interview.OtherParticipantFirstName</p>
+                    <p class="small muted" style="margin-top:.375rem">
+                        They will accept or decline before this can be joined.
+                    </p>
+                </div>
+            }
+
+            @if (_interview.Status == "Accepted")
+            {
+                <InterviewCallRoom Interview="_interview" OnLeft="Reload" />
+            }
+
+            @if (_interview.CanCancel)
+            {
+                <button class="btn btn--quiet btn--block" style="margin-top:1rem" @onclick="Cancel" disabled="@_busy">
+                    Cancel
+                </button>
+            }
+        }
+    </ChildContent>
+    <Tabs>
+        <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+        <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+        <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+        <Tab Href="/family/account" Icon="person" Label="Account" />
+    </Tabs>
+</AppShell>
+
+@code {
+    [Parameter] public Guid InterviewId { get; set; }
+
+    private MobileInterview? _interview;
+    private bool _loading = true;
+    private bool _busy;
+    private string? _error;
+
+    protected override Task OnParametersSetAsync() => Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _interview = await Interviews.GetAsync(InterviewId);
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
+        {
+            _interview = null;
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Cancel()
+    {
+        _busy = true;
+        try { _interview = await Interviews.CancelAsync(InterviewId); }
+        catch (ApiException ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

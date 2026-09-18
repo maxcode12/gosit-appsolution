@@ -1,0 +1,136 @@
+@page "/account"
+@inject SessionStore Session
+@inject GoSitApiClient Api
+@inject CaregiverProfileService CaregiverProfile
+@inject NavigationManager Nav
+
+@*
+    The account, and the way out of it.
+
+    Sectioned like a settings menu rather than a single thin page: once there is more than
+    one thing to manage — documents, insurance, how you get paid — a flat list of buttons
+    stops scanning well. Each row's subtitle is read once here; the row itself still does
+    the fetching that matters when tapped.
+*@
+
+<AppShell Title="Account">
+    @if (_name is not null)
+    {
+        <div class="card">
+            <p class="card__label">Signed in as</p>
+            <p class="card__title" style="font-size:1.125rem">@_name</p>
+            <p class="card__meta">@_email</p>
+        </div>
+    }
+
+    <h2 style="margin:1.5rem 0 .25rem;font-size:1.0625rem">Manage</h2>
+    <div class="card" style="padding:0 1.25rem">
+        <MenuRow Href="/account/documents" Icon="document" Title="Documents" Subtitle="@CertificationsSubtitle" />
+        <MenuRow Href="/account/insurance" Icon="shield" Title="Insurance" Subtitle="@InsuranceSubtitle" />
+    </div>
+
+    <h2 style="margin:1.5rem 0 .25rem;font-size:1.0625rem">Money</h2>
+    <div class="card" style="padding:0 1.25rem">
+        <MenuRow Href="/account/payout" Icon="wallet" Title="Payout Methods" Subtitle="@PayoutSubtitle" />
+        <MenuRow Href="/earnings" Icon="money" Title="Earnings" />
+    </div>
+
+    <h2 style="margin:1.5rem 0 .25rem;font-size:1.0625rem">Resources</h2>
+    <div class="card" style="padding:0 1.25rem">
+        <MenuRow Href="/account/about" Icon="info" Title="About" />
+    </div>
+
+    <button class="btn btn--quiet btn--block" style="margin-top:1.5rem" @onclick="SignOut">
+        <Icon Name="signout" Size="20" /> Sign out
+    </button>
+</AppShell>
+
+@code {
+    private string? _name;
+    private string? _email;
+    private string? _certificationsSubtitle;
+    private string? _insuranceSubtitle;
+    private string? _payoutSubtitle;
+
+    private string CertificationsSubtitle => _certificationsSubtitle ?? "Loading…";
+    private string InsuranceSubtitle => _insuranceSubtitle ?? "Loading…";
+    private string PayoutSubtitle => _payoutSubtitle ?? "Loading…";
+
+    private sealed record Me(string FirstName, string LastName, string Email);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (await Api.GetAsync<Me>("/api/v1/me") is { } me)
+            {
+                _name = $"{me.FirstName} {me.LastName}".Trim();
+                _email = me.Email;
+            }
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException)
+        {
+            // The identity is a nicety; the sign-out button below is the point of the
+            // screen and must work whether or not this loaded.
+        }
+
+        try
+        {
+            var profile = await CaregiverProfile.GetAsync();
+
+            _certificationsSubtitle = Summarize(profile?.Certifications.Select(c => c.IsValid), "certificate");
+            _insuranceSubtitle = Summarize(profile?.InsurancePolicies.Select(p => p.IsValid), "policy", "policies");
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException or SessionExpiredException)
+        {
+            _certificationsSubtitle = "Manage on the website";
+            _insuranceSubtitle = "Manage on the website";
+        }
+
+        try
+        {
+            var payout = await CaregiverProfile.GetPayoutAccountAsync();
+            _payoutSubtitle = payout switch
+            {
+                { PayoutsEnabled: true } => "Ready",
+                { HasAccount: true } => "Action needed",
+                _ => "Not started",
+            };
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException or SessionExpiredException)
+        {
+            _payoutSubtitle = "Unavailable";
+        }
+    }
+
+    /// <summary>"3 valid, 1 pending" — or "None on file" for an empty list.</summary>
+    private static string Summarize(IEnumerable<bool>? validFlags, string singular, string? plural = null)
+    {
+        var list = validFlags?.ToList();
+
+        if (list is null || list.Count == 0)
+        {
+            return "None on file";
+        }
+
+        var valid = list.Count(v => v);
+        var noun = list.Count == 1 ? singular : plural ?? $"{singular}s";
+
+        return valid == list.Count
+            ? $"{list.Count} {noun}"
+            : $"{valid} of {list.Count} {noun} valid";
+    }
+
+    private async Task SignOut()
+    {
+        // Cleared locally first. Whatever the API says, this device must stop holding a
+        // usable session the moment someone asks it to.
+        await Session.ClearAsync();
+        Nav.NavigateTo("/login", replace: true);
+    }
+}

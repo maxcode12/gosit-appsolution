@@ -1,0 +1,99 @@
+name: backend-ci-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/backend/**
+      - tests/GoSit.UnitTests/**
+      - tests/GoSit.IntegrationTests/**
+      - tests/GoSit.ArchitectureTests/**
+      - infra/pipelines/backend-ci.yml
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+steps:
+  - task: UseDotNet@2
+    displayName: Install .NET SDK
+    inputs:
+      packageType: sdk
+      version: 10.0.x
+
+  # Build backend projects explicitly rather than the whole solution: the solution
+  # also contains MAUI projects whose Android/iOS target frameworks need workloads
+  # this agent does not have. Mobile is built by mobile-ci.yml.
+  - script: |
+      set -euo pipefail
+      for p in src/backend/GoSit.Api \
+               tests/GoSit.UnitTests \
+               tests/GoSit.IntegrationTests \
+               tests/GoSit.ArchitectureTests; do
+        dotnet restore "$p"
+      done
+    displayName: Restore
+
+  - script: |
+      set -euo pipefail
+      for p in src/backend/GoSit.Api \
+               tests/GoSit.UnitTests \
+               tests/GoSit.IntegrationTests \
+               tests/GoSit.ArchitectureTests; do
+        dotnet build "$p" --configuration $(buildConfiguration) --no-restore
+      done
+    displayName: Build
+
+  - script: >
+      dotnet test tests/GoSit.UnitTests
+      --configuration $(buildConfiguration) --no-build
+      --logger trx --collect:"XPlat Code Coverage"
+    displayName: Unit tests
+
+  - script: >
+      dotnet test tests/GoSit.ArchitectureTests
+      --configuration $(buildConfiguration) --no-build
+      --logger trx --collect:"XPlat Code Coverage"
+    displayName: Architecture tests
+
+  # Integration tests use Testcontainers and therefore need a Docker daemon on the agent.
+  - script: >
+      dotnet test tests/GoSit.IntegrationTests
+      --configuration $(buildConfiguration) --no-build
+      --logger trx --collect:"XPlat Code Coverage"
+    displayName: Integration tests
+
+  - task: PublishTestResults@2
+    displayName: Publish test results
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/*.trx'
+      failTaskOnFailedTests: true
+
+  - task: PublishCodeCoverageResults@2
+    displayName: Publish code coverage
+    condition: succeededOrFailed()
+    inputs:
+      summaryFileLocation: '**/coverage.cobertura.xml'
+
+  - script: dotnet list package --vulnerable --include-transitive
+    displayName: Dependency vulnerability scan
+
+  - script: >
+      dotnet publish src/backend/GoSit.Api
+      --configuration $(buildConfiguration)
+      --output $(Build.ArtifactStagingDirectory)/api
+    displayName: Publish API
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish artifact
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)/api
+      artifactName: gosit-api

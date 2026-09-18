@@ -1,0 +1,276 @@
+@page "/family/bookings/{BookingId:guid}"
+@inject BookingService Bookings
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+@*
+    One booking, from the family's side — details, cost, and paying for it.
+
+    The payment section is the point of this page existing: it is the mobile half of the
+    same Stripe Payment Element the web app uses (see payment-form.tsx), mounted through
+    JS interop into the BlazorWebView's own web surface rather than reimplemented.
+*@
+
+<AppShell Title="@(_booking?.CareServiceName ?? "Booking")"
+          Subtitle="@(_booking is null ? null : $"with {_booking.CaregiverFirstName}")">
+    <ChildContent>
+        <a href="/family" class="small muted"
+           style="display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;min-height:44px">
+            <Icon Name="back" Size="18" /> All bookings
+        </a>
+
+        @if (_loading)
+        {
+            <p class="muted">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert">@_error</div>
+        }
+        else if (_booking is null)
+        {
+            <div class="empty">That booking could not be found.</div>
+        }
+        else
+        {
+            <div style="margin:.75rem 0 1rem">
+                <span class="@Format.StatusPill(_booking.Status)">@Format.Status(_booking.Status)</span>
+            </div>
+
+            <div class="card">
+                <div class="card__row">
+                    <Icon Name="clock" Size="20" />
+                    <span>@Format.Window(_booking)</span>
+                </div>
+                <div class="card__row">
+                    <Icon Name="pin" Size="20" />
+                    @if (_booking.Address is { } address)
+                    {
+                        <span>@Format.Address(address)</span>
+                    }
+                    else
+                    {
+                        <span>@_booking.Area.City, @_booking.Area.Province</span>
+                    }
+                </div>
+
+                @if (_booking.CheckedInAtUtc is { } checkedIn)
+                {
+                    <div class="card__row">
+                        <Icon Name="check" Size="20" />
+                        <span>
+                            @_booking.CaregiverFirstName checked in at @Format.LocalTimeOf(checkedIn)
+                            @if (_booking.CheckedOutAtUtc is { } checkedOut)
+                            {
+                                @($", out at {Format.LocalTimeOf(checkedOut)}")
+                            }
+                        </span>
+                    </div>
+
+                    @if (Format.Arrival(_booking.CheckInVerification) is { } arrival)
+                    {
+                        <p class="small muted" style="margin:.25rem 0 0 1.875rem">@arrival</p>
+                    }
+                }
+            </div>
+
+            <div class="card">
+                <p class="card__label">Cost</p>
+                <p style="margin:.5rem 0 0">
+                    @if (_booking.PricingUnit == "Nightly" && _booking.NightlyRate is { } nightly)
+                    {
+                        @($"{Format.Money(nightly)} a night · ")
+                    }
+                    else
+                    {
+                        @($"{Format.Money(_booking.HourlyRate)} an hour · ")
+                    }
+                    @if (_booking.ActualTotal is { } actual)
+                    {
+                        <strong>@Format.Money(actual)</strong>
+                        <span class="muted">@(_booking.PricingUnit == "Nightly" ? " for the nights stayed" : " for the time worked")</span>
+                    }
+                    else
+                    {
+                        <span>@Format.Money(_booking.EstimatedTotal) estimated</span>
+                    }
+                </p>
+
+                @if (_receipt is { Status: "Succeeded" } paid)
+                {
+                    <p class="small" style="margin:.5rem 0 0;color:var(--color-success-accent)">
+                        Paid @Format.Money(paid.Amount)
+                        @if (paid.SucceededAtUtc is { } succeeded)
+                        {
+                            @($" on {succeeded.ToLocalTime():d MMM yyyy}")
+                        }
+                    </p>
+                }
+            </div>
+
+            @if (CanPay)
+            {
+                <div class="card">
+                    <p class="card__label">Payment</p>
+                    <p class="small muted" style="margin:.375rem 0 0">
+                        You are charged for the time actually worked, never more than the
+                        estimate without your agreement.
+                    </p>
+
+                    @if (_paymentError is not null)
+                    {
+                        <div class="notice notice--error" role="alert" style="margin-top:.75rem">
+                            @_paymentError
+                        </div>
+                    }
+
+                    @if (_clientSecret is null)
+                    {
+                        <button class="btn btn--primary btn--block" style="margin-top:.75rem"
+                                disabled="@_startingPayment" @onclick="StartPayment">
+                            @(_startingPayment ? "Preparing…" : "Pay for this booking")
+                        </button>
+                    }
+                    else
+                    {
+                        <div id="family-payment-element" style="margin-top:.75rem"></div>
+                        <button class="btn btn--primary btn--block" style="margin-top:.75rem"
+                                disabled="@_confirmingPayment" @onclick="ConfirmPayment">
+                            @(_confirmingPayment ? "Paying…" : "Pay now")
+                        </button>
+                    }
+                </div>
+            }
+        }
+    </ChildContent>
+    <Tabs>
+        <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+        <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+        <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+        <Tab Href="/family/account" Icon="person" Label="Account" />
+    </Tabs>
+</AppShell>
+
+@code {
+    [Parameter] public Guid BookingId { get; set; }
+
+    private MobileBooking? _booking;
+    private MobilePaymentReceipt? _receipt;
+    private bool _loading = true;
+    private string? _error;
+
+    private string? _clientSecret;
+    private bool _startingPayment;
+    private bool _confirmingPayment;
+    private string? _paymentError;
+
+    private bool CanPay =>
+        _booking is not null
+        && _receipt?.Status != "Succeeded"
+        && _booking.Status is "Accepted" or "Completed";
+
+    protected override Task OnParametersSetAsync() => Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _booking = await Bookings.GetAsync(BookingId);
+
+            if (_booking is not null)
+            {
+                _receipt = await Bookings.GetReceiptAsync(BookingId);
+            }
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
+        {
+            _booking = null;
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task StartPayment()
+    {
+        _startingPayment = true;
+        _paymentError = null;
+
+        try
+        {
+            var intent = await Bookings.StartPaymentAsync(BookingId);
+
+            if (intent is null)
+            {
+                _paymentError = "Something went wrong. Please try again.";
+                return;
+            }
+
+            _clientSecret = intent.ClientSecret;
+            StateHasChanged();
+
+            // The div is only in the DOM once this render commits, so the mount call
+            // waits for the next tick rather than racing it.
+            await Task.Yield();
+            await JS.InvokeVoidAsync(
+                "gositStripe.mount", "family-payment-element",
+                StripeConfig.PublishableKey, _clientSecret);
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _paymentError = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _paymentError = "Could not reach GoSit. Check your connection and try again.";
+        }
+        finally
+        {
+            _startingPayment = false;
+        }
+    }
+
+    private async Task ConfirmPayment()
+    {
+        _confirmingPayment = true;
+        _paymentError = null;
+
+        try
+        {
+            var error = await JS.InvokeAsync<string?>("gositStripe.confirm");
+
+            if (error is not null)
+            {
+                _paymentError = error;
+                return;
+            }
+
+            _clientSecret = null;
+            await Reload();
+        }
+        finally
+        {
+            _confirmingPayment = false;
+        }
+    }
+}

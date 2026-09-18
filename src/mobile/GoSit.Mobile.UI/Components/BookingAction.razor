@@ -1,0 +1,100 @@
+@inject BookingService Bookings
+
+@*
+    The one thing this booking needs from the caregiver right now.
+
+    Deliberately a single button. The state machine already decides what is possible, and
+    offering the full set greyed out is how a doorstep interface becomes a puzzle. Accept
+    and decline are the one exception, because they are a genuine choice rather than a
+    step.
+
+    Check-in sends the device's location when it can and proceeds without it when it
+    cannot — see BookingService. The button never waits on a permission dialog it might
+    not get an answer to.
+*@
+
+@if (_error is not null)
+{
+    <div class="notice notice--error" role="alert" style="margin-bottom:.75rem">@_error</div>
+}
+
+@switch (Booking.Status)
+{
+    case "Pending":
+        <div style="display:flex;gap:.5rem">
+            <button class="btn @Primary" style="flex:1" disabled="@_busy"
+                    @onclick="() => Run(b => Bookings.AcceptAsync(b))">
+                @(_busy ? "Working…" : "Accept")
+            </button>
+            <button class="btn @Quiet" disabled="@_busy"
+                    @onclick="() => Run(b => Bookings.DeclineAsync(b, null))">
+                Decline
+            </button>
+        </div>
+        break;
+
+    case "Accepted":
+        <button class="btn @Primary btn--block" disabled="@_busy"
+                @onclick="() => Run(b => Bookings.CheckInAsync(b))">
+            @(_busy ? "Checking in…" : "I have arrived — check in")
+        </button>
+        <p class="small @(OnDeep ? "" : "muted")" style="margin:.625rem 0 0;opacity:.8">
+            This starts the clock and tells the family you are there.
+        </p>
+        break;
+
+    case "InProgress":
+        <button class="btn @Secondary btn--block" disabled="@_busy"
+                @onclick="() => Run(b => Bookings.CheckOutAsync(b))">
+            @(_busy ? "Checking out…" : "Finish and check out")
+        </button>
+        <p class="small @(OnDeep ? "" : "muted")" style="margin:.625rem 0 0;opacity:.8">
+            You are paid for the time you actually work, rounded up to fifteen minutes.
+        </p>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired] public MobileBooking Booking { get; set; } = null!;
+
+    /// <summary>Raised after a transition so the parent can reload.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    /// <summary>True when this sits on the dark focus card, which needs light buttons.</summary>
+    [Parameter] public bool OnDeep { get; set; }
+
+    private bool _busy;
+    private string? _error;
+
+    private string Primary => OnDeep ? "btn--onDeep" : "btn--primary";
+
+    private string Secondary => OnDeep ? "btn--onDeep" : "btn--secondary";
+
+    private string Quiet => OnDeep ? "btn--onDeep" : "btn--quiet";
+
+    private async Task Run(Func<Guid, Task<MobileBooking?>> transition)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await transition(Booking.Id);
+            await OnChanged.InvokeAsync();
+        }
+        catch (ApiException ex)
+        {
+            // The API's own wording. Its refusals are written to be read, and "this
+            // booking has run past the maximum length" beats anything invented here.
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

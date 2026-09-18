@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gosit-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/backend/GoSit.Api", "--no-build", "--urls", "http://localhost:5199"],
+      "port": 5199
+    },
+    {
+      "name": "gosit-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "src/web/gosit-web", "--", "--port", "3100"],
+      "port": 3100
+    }
+  ]
+}

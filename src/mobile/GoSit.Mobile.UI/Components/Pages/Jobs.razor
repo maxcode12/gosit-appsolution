@@ -1,0 +1,87 @@
+@page "/jobs"
+@inject BookingService Bookings
+@inject NavigationManager Nav
+
+@*
+    Every job, upcoming first.
+
+    Split into what is still to come and what is done, because those are two different
+    questions — "what am I doing this week" and "was I paid for that" — and interleaving
+    them by date answers neither.
+*@
+
+<AppShell Title="Work" Subtitle="Everything you have on.">
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_upcoming.Count == 0 && _past.Count == 0)
+    {
+        <div class="empty">
+            <p style="margin:0 0 .25rem;font-weight:600">No work yet</p>
+            <p class="small" style="margin:0">
+                Requests from families will appear here. Keeping your services and
+                availability up to date is what puts you in their search results.
+            </p>
+        </div>
+    }
+    else
+    {
+        @if (_upcoming.Count > 0)
+        {
+            <Section Heading="Coming up" Bookings="_upcoming" />
+        }
+
+        @if (_past.Count > 0)
+        {
+            <Section Heading="Finished" Bookings="_past" />
+        }
+    }
+</AppShell>
+
+@code {
+    private List<MobileBooking> _upcoming = [];
+    private List<MobileBooking> _past = [];
+    private bool _loading = true;
+    private string? _error;
+
+    private static readonly string[] Closed =
+        ["Completed", "Cancelled", "Declined", "Disputed"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await Bookings.ListAsync();
+
+            _upcoming = all.Where(b => !Closed.Contains(b.Status))
+                .OrderBy(b => b.StartAtUtc)
+                .ToList();
+
+            // Most recent first: the job someone is asking about is the one just finished.
+            _past = all.Where(b => Closed.Contains(b.Status))
+                .OrderByDescending(b => b.StartAtUtc)
+                .ToList();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Your work will load when you are back online.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

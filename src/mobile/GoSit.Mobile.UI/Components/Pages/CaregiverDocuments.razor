@@ -1,0 +1,86 @@
+@page "/account/documents"
+@inject CaregiverProfileService CaregiverProfile
+@inject NavigationManager Nav
+
+<AppShell Title="Documents" Subtitle="Your certifications.">
+    <a href="/account" class="small muted"
+       style="display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;min-height:44px">
+        <Icon Name="back" Size="18" /> Account
+    </a>
+
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_certifications.Count == 0)
+    {
+        <div class="empty">
+            <p style="margin:0 0 .25rem;font-weight:600">No certificates on file</p>
+            <p class="small" style="margin:0">
+                First Aid, CPR and specialist training are added on the Go Sit website —
+                some services need them before they show up as bookable.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="stack">
+            @foreach (var certification in _certifications)
+            {
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start">
+                        <h3 class="card__title" style="font-size:1rem">@certification.Name</h3>
+                        <span class="@StatusPill(certification.Status)">@certification.Status</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <p class="small muted" style="margin-top:1rem">
+        Submitting a new certificate or renewing one is done on the Go Sit website.
+    </p>
+</AppShell>
+
+@code {
+    private List<MobileCaregiverCertification> _certifications = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var profile = await CaregiverProfile.GetAsync();
+            _certifications = profile?.Certifications.ToList() ?? [];
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string StatusPill(string status) => status switch
+    {
+        "Verified" => "pill pill--done",
+        "Pending" => "pill pill--wait",
+        "Rejected" => "pill pill--wait",
+        _ => "pill pill--off",
+    };
+}

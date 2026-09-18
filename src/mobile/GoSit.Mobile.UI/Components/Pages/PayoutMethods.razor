@@ -1,0 +1,158 @@
+@page "/account/payout"
+@inject CaregiverProfileService CaregiverProfile
+@inject IExternalBrowserLauncher BrowserLauncher
+@inject NavigationManager Nav
+
+<AppShell Title="Payout Methods" Subtitle="How you get paid.">
+    <a href="/account" class="small muted"
+       style="display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;min-height:44px">
+        <Icon Name="back" Size="18" /> Account
+    </a>
+
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_account is null || !_account.BillingConfigured)
+    {
+        <div class="empty">
+            <p style="margin:0 0 .25rem;font-weight:600">Payouts are not set up yet</p>
+            <p class="small" style="margin:0">Try again shortly, or from the website.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem">
+                <div>
+                    <p class="card__label">Status</p>
+                    <p class="card__title" style="font-size:1.0625rem;margin-top:.25rem">@StatusHeadline</p>
+                </div>
+                <span class="@StatusPill">@StatusLabel</span>
+            </div>
+
+            <p class="small muted" style="margin-top:.5rem">@StatusDetail</p>
+
+            @if (!_account.PayoutsEnabled)
+            {
+                <button class="btn btn--primary btn--block" style="margin-top:.875rem"
+                        disabled="@_starting" @onclick="ContinueOnboarding">
+                    @(_starting ? "Opening…" : _account.HasAccount ? "Finish setup" : "Set up payouts")
+                </button>
+            }
+        </div>
+
+        <p class="small muted" style="margin-top:1rem">
+            Go Sit never sees your bank details — setup happens on Stripe's own secure
+            page, which opens in your browser.
+        </p>
+    }
+</AppShell>
+
+@code {
+    private MobilePayoutAccount? _account;
+    private bool _loading = true;
+    private bool _starting;
+    private string? _error;
+
+    private string StatusHeadline => _account switch
+    {
+        { PayoutsEnabled: true } => "Ready to receive payouts",
+        { HasAccount: true } => "Action needed",
+        _ => "Not started",
+    };
+
+    private string StatusDetail => _account switch
+    {
+        { PayoutsEnabled: true } =>
+            "Earnings become available 14 days after a family's payment settles, to cover the dispute window.",
+        { HasAccount: true, DetailsSubmitted: true } => _account.DisabledReason is { } reason
+            ? ExplainDisabledReason(reason)
+            : "Stripe is still reviewing what you submitted.",
+        { HasAccount: true } =>
+            "You started setup but have not finished it.",
+        _ => "You need a payout account before Go Sit can pay you.",
+    };
+
+    private string StatusPill => _account?.PayoutsEnabled == true ? "pill pill--done" : "pill pill--wait";
+
+    private string StatusLabel => _account?.PayoutsEnabled == true ? "Ready" : "Setup needed";
+
+    /// <summary>
+    /// Turns Stripe's v2 status_details code into something a caregiver can act on.
+    /// Mirrors the web app's PayoutSetup component exactly, including the fallback to
+    /// the raw code — an unrecognised reason someone can search for beats a vague
+    /// "there was a problem".
+    /// </summary>
+    private static string ExplainDisabledReason(string reason) => reason switch
+    {
+        "requirements_past_due" => "Some details are outstanding. Continue below to provide them.",
+        "requirements_pending_verification" => "Your details are being verified. This usually takes a day or two.",
+        "rejected_fraud" => "Our payment provider could not verify this account. Contact support.",
+        "rejected_terms_of_service" => "This account was declined by our payment provider. Contact support.",
+        "listed" => "This account is under additional review. Contact support if it persists.",
+        "under_review" => "This account is being reviewed by our payment provider.",
+        "provider_not_configured" => "Payouts are not connected on this environment yet.",
+        _ => $"Our payment provider is holding this account ({reason}).",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _account = await CaregiverProfile.GetPayoutAccountAsync();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ContinueOnboarding()
+    {
+        _starting = true;
+        _error = null;
+
+        try
+        {
+            var onboarding = await CaregiverProfile.StartPayoutOnboardingAsync();
+
+            if (onboarding is not null)
+            {
+                await BrowserLauncher.OpenAsync(new Uri(onboarding.OnboardingUrl));
+            }
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach Go Sit. Check your connection and try again.";
+        }
+        finally
+        {
+            _starting = false;
+        }
+    }
+}

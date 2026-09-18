@@ -1,0 +1,61 @@
+name: web-ci-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/web/**
+      - tests/web-e2e/**
+      - infra/pipelines/web-ci.yml
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  webDir: src/web/gosit-web
+  e2eDir: tests/web-e2e
+
+steps:
+  - task: NodeTool@0
+    displayName: Install Node
+    inputs:
+      versionSpec: 22.x
+
+  - script: npm ci
+    workingDirectory: $(webDir)
+    displayName: Install web dependencies
+
+  - script: npm run lint
+    workingDirectory: $(webDir)
+    displayName: Lint
+
+  - script: npm run typecheck
+    workingDirectory: $(webDir)
+    displayName: Typecheck
+
+  - script: npm run build
+    workingDirectory: $(webDir)
+    displayName: Build
+
+  - script: npm install
+    workingDirectory: $(e2eDir)
+    displayName: Install e2e dependencies
+
+  - script: npx playwright install --with-deps chromium
+    workingDirectory: $(e2eDir)
+    displayName: Install Playwright browsers
+
+  # Smoke tests need only the web app. The @api-tagged specs additionally need a running
+  # ASP.NET Core API and are run by the backend integration job instead.
+  - script: npm run test:smoke
+    workingDirectory: $(e2eDir)
+    displayName: Playwright smoke tests
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Playwright report
+    condition: failed()
+    inputs:
+      pathToPublish: $(e2eDir)/playwright-report
+      artifactName: playwright-report

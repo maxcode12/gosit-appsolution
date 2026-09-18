@@ -1,0 +1,195 @@
+@page "/"
+@inject BookingService Bookings
+@inject CaregiverProfileService CaregiverProfile
+@inject SessionStore Session
+@inject NavigationManager Nav
+
+@*
+    The screen the app exists for.
+
+    A caregiver opens this standing at a door, in the cold, with one hand. So it answers
+    one question — what am I doing now, and what is the button — and everything else is a
+    tab away. The job in hand gets the whole width and the app's only dark card; requests
+    waiting on a reply come next, because they are the only other thing that is anyone's
+    turn.
+*@
+
+<AppShell Title="Today" Subtitle="@Subtitle">
+    @if (_loading)
+    {
+        <p class="muted">Loading your day…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else
+    {
+        @if (_profile is not null)
+        {
+            <button type="button" class="@AvailabilityBarClass" disabled="@_togglingAvailability"
+                    @onclick="ToggleAvailability" style="width:100%;text-align:left;border:none;cursor:pointer">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+                    <div>
+                        <p style="margin:0;font-weight:700">
+                            @(_profile.AvailableForLastMinuteRequests ? "Open to last-minute requests" : "Not taking last-minute requests")
+                        </p>
+                        <p class="small" style="margin:.125rem 0 0;opacity:.85">
+                            @(_profile.AvailableForLastMinuteRequests
+                                ? "Families searching for something starting soon see you first."
+                                : "Tap to let families booking on short notice find you.")
+                        </p>
+                    </div>
+                    <span aria-hidden style="font-size:1.5rem;line-height:1">
+                        @(_profile.AvailableForLastMinuteRequests ? "●" : "○")
+                    </span>
+                </div>
+            </button>
+        }
+
+        @if (_current is not null)
+        {
+            <div class="card card--focus">
+                <p class="card__label">@(_current.Status == "InProgress" ? "In progress" : "Next")</p>
+                <h2 class="card__title">@_current.CareServiceName</h2>
+                <p class="card__meta">
+                    for @_current.CareRequesterFirstName · @Format.Window(_current)
+                </p>
+
+                <div style="margin-top:1rem">
+                    <BookingAction Booking="_current" OnChanged="Reload" OnDeep="true" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty">
+                <p style="margin:0 0 .25rem;font-weight:600">Nothing on right now</p>
+                <p class="small" style="margin:0">
+                    Confirmed work shows up here when it is due to start.
+                </p>
+            </div>
+        }
+
+        @if (_requests.Count > 0)
+        {
+            <h2 style="margin:1.75rem 0 .75rem;font-size:1.0625rem">
+                Waiting on you (@_requests.Count)
+            </h2>
+
+            <div class="stack">
+                @foreach (var booking in _requests)
+                {
+                    <a class="card" href="@($"/jobs/{booking.Id}")"
+                       style="display:block;text-decoration:none;color:inherit">
+                        <div style="display:flex;justify-content:space-between;gap:.75rem">
+                            <div>
+                                <h3 class="card__title" style="font-size:1.0625rem">
+                                    @booking.CareServiceName
+                                </h3>
+                                <p class="card__meta">
+                                    for @booking.CareRequesterFirstName · @Format.Window(booking)
+                                </p>
+                            </div>
+                            <span class="pill pill--wait">Reply</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    }
+</AppShell>
+
+@code {
+    private IReadOnlyList<MobileBooking> _requests = [];
+    private MobileBooking? _current;
+    private MobileCaregiverProfile? _profile;
+    private bool _loading = true;
+    private bool _togglingAvailability;
+    private string? _error;
+
+    private string AvailabilityBarClass => _profile?.AvailableForLastMinuteRequests == true
+        ? "card card--focus"
+        : "card";
+
+    private string Subtitle => _loading
+        ? ""
+        : _requests.Count switch
+        {
+            0 => "Nothing needs an answer.",
+            1 => "1 request is waiting on you.",
+            _ => $"{_requests.Count} requests are waiting on you.",
+        };
+
+    protected override Task OnInitializedAsync() => Reload();
+
+    private async Task Reload()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var all = await Bookings.ListAsync();
+            _profile = await CaregiverProfile.GetAsync();
+
+            _requests = all.Where(b => b.Status == "Pending")
+                .OrderBy(b => b.StartAtUtc)
+                .ToList();
+
+            /*
+             * In-progress beats merely accepted, whatever the clock says. A caregiver who
+             * checked in is mid-shift, and showing them tomorrow's job instead would hide
+             * the check-out button behind a tab.
+             */
+            _current = all.FirstOrDefault(b => b.Status == "InProgress")
+                ?? all.Where(b => b.Status == "Accepted")
+                    .OrderBy(b => b.StartAtUtc)
+                    .FirstOrDefault();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Your work will load when you are back online.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ToggleAvailability()
+    {
+        if (_profile is null || _togglingAvailability)
+        {
+            return;
+        }
+
+        _togglingAvailability = true;
+
+        try
+        {
+            _profile = await CaregiverProfile.SetAvailableForLastMinuteRequestsAsync(
+                !_profile.AvailableForLastMinuteRequests);
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _togglingAvailability = false;
+        }
+    }
+}

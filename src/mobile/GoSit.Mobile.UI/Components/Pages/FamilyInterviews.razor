@@ -1,0 +1,75 @@
+@page "/family/interviews"
+@inject InterviewService Interviews
+@inject NavigationManager Nav
+
+@* A family's video interviews. Requesting one still happens on the website — see AGENTS.md notes on Signup.razor for why booking creation stays web-only; this tracks and joins what is already requested. *@
+
+<AppShell Title="Interviews" Subtitle="Video meetings with caregivers.">
+    <ChildContent>
+        @if (_loading)
+        {
+            <p class="muted">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert">@_error</div>
+        }
+        else if (_interviews.Count == 0)
+        {
+            <div class="empty">
+                <p style="margin:0 0 .25rem;font-weight:600">No interviews yet</p>
+                <p class="small" style="margin:0">
+                    Ask to meet a caregiver before booking from the GoSit website —
+                    it shows up here once you have.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="stack">
+                @foreach (var interview in _interviews)
+                {
+                    <InterviewRow Interview="interview" Href="@($"/family/interviews/{interview.Id}")" />
+                }
+            </div>
+        }
+    </ChildContent>
+    <Tabs>
+        <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+        <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+        <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+        <Tab Href="/family/account" Icon="person" Label="Account" />
+    </Tabs>
+</AppShell>
+
+@code {
+    private List<MobileInterview> _interviews = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _interviews = (await Interviews.ListAsync())
+                .OrderByDescending(i => i.ScheduledStartUtc)
+                .ToList();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

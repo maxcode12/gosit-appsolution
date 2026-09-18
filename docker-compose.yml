@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: gosit-postgres
+    environment:
+      POSTGRES_DB: gosit
+      POSTGRES_USER: gosit
+      # Local development only. Real secrets come from Azure Key Vault.
+      POSTGRES_PASSWORD: gosit_local_dev
+    ports:
+      # Non-default host ports throughout, so Go Sit's local stack never
+      # collides with other services already running on this machine.
+      - "5434:5432"
+    volumes:
+      - gosit-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gosit -d gosit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: gosit-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: gosit-azurite
+    # --skipApiVersionCheck: the client pins a storage API version newer than this
+    # image knows, and Azurite refuses anything it does not recognise.
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "11000:10000"
+      - "11001:10001"
+      - "11002:10002"
+    volumes:
+      - gosit-azurite-data:/data
+
+volumes:
+  gosit-postgres-data:
+  gosit-azurite-data:

@@ -1,0 +1,182 @@
+@page "/earnings"
+@inject GoSitApiClient Api
+@inject NavigationManager Nav
+
+@*
+    What is owed and what has been paid.
+
+    Two numbers at the top because those are the two questions. The week-by-week bars are
+    a shape to notice a trend in at a glance — "was this week better than last" — without
+    reading every line below, which is for checking a particular job.
+*@
+
+<AppShell Title="Earnings" Subtitle="What you have earned and what is on its way.">
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_earnings is null || _earnings.Statement.Count == 0)
+    {
+        <div class="empty">
+            <p style="margin:0 0 .25rem;font-weight:600">Nothing yet</p>
+            <p class="small" style="margin:0">
+                Pay appears here once you have finished a booking and the family has been
+                charged.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="card card--focus" style="margin:0">
+            <p class="card__label">Total earned</p>
+            <p style="margin:.25rem 0 0;font-size:2rem;font-weight:800">
+                @Format.Money(_earnings.PendingBalance + _earnings.TotalPaid)
+            </p>
+            <div style="display:flex;gap:1.5rem;margin-top:.75rem">
+                <div>
+                    <p class="small" style="margin:0;opacity:.85">Not yet sent</p>
+                    <p style="margin:.125rem 0 0;font-weight:700">@Format.Money(_earnings.PendingBalance)</p>
+                </div>
+                <div>
+                    <p class="small" style="margin:0;opacity:.85">Paid out</p>
+                    <p style="margin:.125rem 0 0;font-weight:700">@Format.Money(_earnings.TotalPaid)</p>
+                </div>
+            </div>
+        </div>
+
+        @if (_weeks.Count > 0)
+        {
+            <h2 style="margin:1.75rem 0 .75rem;font-size:1.0625rem">By week</h2>
+            <div class="card" style="display:flex;align-items:flex-end;gap:.625rem;height:120px">
+                @foreach (var week in _weeks)
+                {
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.375rem;height:100%;justify-content:flex-end">
+                        <div style="width:100%;max-width:28px;border-radius:6px 6px 0 0;background:var(--color-brand-primary);
+                                     height:@(BarHeightPercent(week.Net))%;min-height:4px"
+                             title="@Format.Money(week.Net)"></div>
+                        <span class="small muted" style="font-size:.6875rem">@week.Label</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <h2 style="margin:1.75rem 0 .75rem;font-size:1.0625rem">Recent activity</h2>
+
+        <div class="stack">
+            @foreach (var line in _earnings.Statement)
+            {
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;gap:.75rem">
+                        <div>
+                            <strong>@Format.Money(line.Net)</strong>
+                            <p class="small muted" style="margin:.125rem 0 0">
+                                @Format.Money(line.Gross) less @Format.Money(line.PlatformFee) fee
+                            </p>
+                            @*
+                                A caregiver waits out the family's dispute window before
+                                money moves. Saying when — or that a dispute has stopped it —
+                                is the difference between a policy and an unexplained delay.
+                            *@
+                            @if (Format.Availability(line.Status, line.AvailableAtUtc, line.IsHeldForDispute) is { } note)
+                            {
+                                <p class="small muted" style="margin:.125rem 0 0">@note</p>
+                            }
+                        </div>
+                        <span class="@Format.PayoutPill(line.Status)">@Format.PayoutStatus(line.Status)</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</AppShell>
+
+@code {
+    private EarningsBody? _earnings;
+    private List<WeekTotal> _weeks = [];
+    private bool _loading = true;
+    private string? _error;
+
+    private sealed record EarningsBody(
+        decimal PendingBalance,
+        decimal TotalPaid,
+        IReadOnlyList<StatementLine> Statement);
+
+    private sealed record StatementLine(
+        decimal Gross,
+        decimal PlatformFee,
+        decimal Net,
+        string Status,
+        DateTime AvailableAtUtc,
+        bool IsHeldForDispute);
+
+    private sealed record WeekTotal(string Label, decimal Net);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _earnings = await Api.GetAsync<EarningsBody>("/api/v1/caregivers/me/earnings");
+            _weeks = BuildWeeklyTotals(_earnings);
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Your earnings will load when you are back online.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>
+    /// The last eight weeks, oldest first, keyed by the Monday each falls in — same
+    /// grouping whichever day someone opens this on. A statement line's own
+    /// <c>AvailableAtUtc</c> is the only date on it, so that is what weeks are drawn from;
+    /// it is when the money clears, not when the booking happened, but it is close enough
+    /// for a shape to notice a trend in.
+    /// </summary>
+    private static List<WeekTotal> BuildWeeklyTotals(EarningsBody? earnings)
+    {
+        if (earnings is null || earnings.Statement.Count == 0)
+        {
+            return [];
+        }
+
+        var byWeek = earnings.Statement
+            .GroupBy(line => StartOfWeek(line.AvailableAtUtc.ToLocalTime()))
+            .ToDictionary(g => g.Key, g => g.Sum(line => line.Net));
+
+        var thisWeek = StartOfWeek(DateTime.Now);
+
+        return Enumerable.Range(0, 8)
+            .Select(i => thisWeek.AddDays(-7 * (7 - i)))
+            .Select(weekStart => new WeekTotal(
+                weekStart.ToString("d MMM"),
+                byWeek.GetValueOrDefault(weekStart, 0m)))
+            .ToList();
+    }
+
+    private static DateTime StartOfWeek(DateTime date)
+    {
+        var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return date.Date.AddDays(-diff);
+    }
+
+    private int BarHeightPercent(decimal net)
+    {
+        var max = _weeks.Count == 0 ? 0m : _weeks.Max(w => w.Net);
+        return max <= 0 ? 4 : Math.Max(4, (int)(net / max * 100));
+    }
+}

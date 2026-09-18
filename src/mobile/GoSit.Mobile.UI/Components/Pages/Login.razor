@@ -1,0 +1,124 @@
+@page "/login"
+@layout EmptyLayout
+@inject GoSitApiClient Api
+@inject SessionStore Session
+@inject NavigationManager Nav
+
+@*
+    Signing in.
+
+    No bottom bar: there is nowhere else to go until this succeeds, and offering tabs that
+    all bounce back to here is worse than offering none.
+*@
+
+<div style="display:flex;flex-direction:column;min-height:100dvh;
+            padding:calc(env(safe-area-inset-top) + 3rem) 1.5rem
+                    calc(env(safe-area-inset-bottom) + 2rem)">
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:26rem;width:100%;margin:0 auto;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;gap:.625rem;margin-bottom:2rem">
+            <span style="display:grid;place-items:center;width:44px;height:44px;
+                         border-radius:14px;background:var(--color-brand-primary);
+                         color:var(--color-text-on-brand)">
+                <Icon Name="shield" Size="24" />
+            </span>
+            <span style="font-family:var(--font-role-heading);font-size:1.5rem;font-weight:800">
+                GoSit
+            </span>
+        </div>
+
+        <h1 style="font-size:1.75rem;font-weight:800;margin-bottom:.375rem">Welcome back</h1>
+        <p class="muted" style="margin:0 0 1.75rem">Sign in to see your work.</p>
+
+        @* No FormName: that opts a form into static posting, which is a Blazor Web App concept.
+               In a WebView the component is always interactive, and the attribute stops the
+               inputs binding at all. *@
+            <EditForm Model="_form" OnValidSubmit="SignIn" style="text-align:left">
+            <div class="field">
+                <label class="field__label" for="email">Email address</label>
+                @* inputmode + autocomplete: the phone shows the right keyboard and can
+                   fill from the password manager, which is most of the typing saved. *@
+                <InputText id="email" class="field__input" @bind-Value="_form.Email"
+                           type="email" inputmode="email" autocomplete="username"
+                           autocapitalize="none" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="password">Password</label>
+                <InputText id="password" class="field__input" @bind-Value="_form.Password"
+                           type="password" autocomplete="current-password" />
+            </div>
+
+            <a href="/forgot-password"
+               style="display:inline-block;margin-bottom:1.25rem;color:var(--color-brand-primary);font-weight:600;text-decoration:none">
+                Forgot password?
+            </a>
+
+            @if (_error is not null)
+            {
+                <div class="notice notice--error" role="alert" style="margin-bottom:1rem">@_error</div>
+            }
+
+            <button type="submit" class="btn btn--primary btn--block" disabled="@_busy">
+                @(_busy ? "Signing in…" : "Sign in")
+            </button>
+        </EditForm>
+
+        <p style="margin-top:1.5rem">
+            <span class="muted">Don't have an account?</span>
+            <a href="/signup" style="color:var(--color-brand-primary);font-weight:600;text-decoration:none">
+                Create one
+            </a>
+        </p>
+    </div>
+</div>
+
+@code {
+    private readonly Credentials _form = new();
+    private bool _busy;
+    private string? _error;
+
+    private sealed class Credentials
+    {
+        public string Email { get; set; } = "";
+
+        public string Password { get; set; } = "";
+    }
+
+    private async Task SignIn()
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var tokens = await Api.PostAsync<AuthTokens>(
+                "/api/v1/auth/login", new { email = _form.Email, password = _form.Password });
+
+            if (tokens is null)
+            {
+                _error = "Something went wrong. Please try again.";
+                return;
+            }
+
+            await Session.SaveAsync(tokens);
+            // Two account types share this app. A care requester has never had a "job" —
+            // sending them to the caregiver's Today screen would ask them to check in
+            // somewhere they have never worked.
+            Nav.NavigateTo(tokens.Role == "CareRequester" ? "/family" : "/", replace: true);
+        }
+        catch (ApiException ex)
+        {
+            // The API deliberately does not say which half was wrong, and neither does this.
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach GoSit. Check your connection and try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

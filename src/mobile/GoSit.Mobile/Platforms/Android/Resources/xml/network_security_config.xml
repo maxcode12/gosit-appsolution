@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android blocks plaintext HTTP by default since API 28. The API this app talks to is
+  always plaintext http:// today — see MauiProgram.ApiBaseUrl — because there is no
+  deployed HTTPS endpoint yet, only the local dev API and the Android emulator's alias
+  for it. This exception is scoped to exactly those two addresses, both of which are
+  unroutable outside the machine running them, rather than turned on globally.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

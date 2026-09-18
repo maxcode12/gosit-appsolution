@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/GoSit.Api/GoSit.Api.csproj" />
+    <Project Path="src/backend/GoSit.Application/GoSit.Application.csproj" />
+    <Project Path="src/backend/GoSit.Domain/GoSit.Domain.csproj" />
+    <Project Path="src/backend/GoSit.Infrastructure/GoSit.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/mobile/">
+    <Project Path="src/mobile/GoSit.Mobile.UI/GoSit.Mobile.UI.csproj" />
+    <Project Path="src/mobile/GoSit.Mobile/GoSit.Mobile.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GoSit.ArchitectureTests/GoSit.ArchitectureTests.csproj" />
+    <Project Path="tests/GoSit.IntegrationTests/GoSit.IntegrationTests.csproj" />
+    <Project Path="tests/GoSit.UnitTests/GoSit.UnitTests.csproj" />
+  </Folder>
+</Solution>

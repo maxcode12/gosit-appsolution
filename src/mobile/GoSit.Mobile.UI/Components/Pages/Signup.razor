@@ -1,0 +1,120 @@
+@page "/signup"
+@layout EmptyLayout
+@inject GoSitApiClient Api
+@inject SessionStore Session
+@inject NavigationManager Nav
+
+@*
+    Creating a caregiver account.
+
+    This app is the caregiver's work app, not the family-facing one — see Today.razor —
+    so unlike the web signup there is no account-type choice here. Registering always
+    asks for UserRole.Caregiver.
+*@
+
+<div style="display:flex;flex-direction:column;min-height:100dvh;
+            padding:calc(env(safe-area-inset-top) + 3rem) 1.5rem
+                    calc(env(safe-area-inset-bottom) + 2rem)">
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:26rem;width:100%;margin:0 auto;text-align:center">
+        <h1 style="font-size:1.75rem;font-weight:800;margin-bottom:.375rem">Create your account</h1>
+        <p class="muted" style="margin:0 0 1.75rem">Sign up to start taking bookings.</p>
+
+        <EditForm Model="_form" OnValidSubmit="Submit" style="text-align:left">
+            <div class="field">
+                <label class="field__label" for="firstName">First name</label>
+                <InputText id="firstName" class="field__input" @bind-Value="_form.FirstName"
+                           autocomplete="given-name" />
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="lastName">Last name</label>
+                <InputText id="lastName" class="field__input" @bind-Value="_form.LastName"
+                           autocomplete="family-name" />
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="email">Email address</label>
+                <InputText id="email" class="field__input" @bind-Value="_form.Email"
+                           type="email" inputmode="email" autocomplete="username"
+                           autocapitalize="none" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="password">Password</label>
+                <InputText id="password" class="field__input" @bind-Value="_form.Password"
+                           type="password" autocomplete="new-password" />
+            </div>
+
+            @if (_error is not null)
+            {
+                <div class="notice notice--error" role="alert" style="margin-bottom:1rem">@_error</div>
+            }
+
+            <button type="submit" class="btn btn--primary btn--block" disabled="@_busy">
+                @(_busy ? "Creating account…" : "Create account")
+            </button>
+        </EditForm>
+
+        <a href="/login"
+           style="display:inline-block;margin-top:1.5rem;color:var(--color-brand-primary);font-weight:600;text-decoration:none">
+            Already have an account? Sign in
+        </a>
+    </div>
+</div>
+
+@code {
+    private readonly Model _form = new();
+    private bool _busy;
+    private string? _error;
+
+    private sealed class Model
+    {
+        public string FirstName { get; set; } = "";
+
+        public string LastName { get; set; } = "";
+
+        public string Email { get; set; } = "";
+
+        public string Password { get; set; } = "";
+    }
+
+    private async Task Submit()
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var tokens = await Api.PostAsync<AuthTokens>("/api/v1/auth/register", new
+            {
+                email = _form.Email,
+                password = _form.Password,
+                firstName = _form.FirstName,
+                lastName = _form.LastName,
+                role = "Caregiver",
+            });
+
+            if (tokens is null)
+            {
+                _error = "Something went wrong. Please try again.";
+                return;
+            }
+
+            await Session.SaveAsync(tokens);
+            Nav.NavigateTo("/", replace: true);
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach GoSit. Check your connection and try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

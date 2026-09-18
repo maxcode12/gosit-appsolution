@@ -1,0 +1,75 @@
+@inject NotificationService Notifications
+
+@*
+    The signed-in frame: a sticky title and a bottom tab bar.
+
+    Navigation is at the bottom because that is where a thumb reaches on a phone held in
+    one hand. A top tab bar photographs better and is unusable at any size above about
+    five inches, which is every phone a caregiver actually owns.
+*@
+
+<div class="app">
+    <header class="app__header">
+        <h1 class="app__title">@Title</h1>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <p class="app__subtitle">@Subtitle</p>
+        }
+    </header>
+
+    <main class="app__body">
+        @ChildContent
+    </main>
+
+    <nav class="tabs" aria-label="Main">
+        <CascadingValue Name="UnreadNotifications" Value="_unreadNotifications">
+            @if (Tabs is not null)
+            {
+                @Tabs
+            }
+            else
+            {
+                <Tab Href="/" Icon="today" Label="Today" Exact="true" />
+                <Tab Href="/jobs" Icon="work" Label="Work" />
+                <Tab Href="/interviews" Icon="video" Label="Interviews" />
+                <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+                <Tab Href="/earnings" Icon="money" Label="Earnings" />
+                <Tab Href="/account" Icon="person" Label="Account" />
+            }
+        </CascadingValue>
+    </nav>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter] public string? Subtitle { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Overrides the default caregiver tab bar. A care requester is a different account
+    /// on the same app, not a caregiver with different labels — see FamilyBookings.razor.
+    /// </summary>
+    [Parameter] public RenderFragment? Tabs { get; set; }
+
+    private int? _unreadNotifications;
+
+    /// <summary>
+    /// Read quietly on every screen so the Inbox badge is never more than one navigation
+    /// stale. A failure here is not worth a page of its own explaining itself — the badge
+    /// just stays as it was.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var list = await Notifications.ListAsync(unreadOnly: true);
+            _unreadNotifications = list?.UnreadCount;
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException or SessionExpiredException)
+        {
+            _unreadNotifications = null;
+        }
+    }
+}

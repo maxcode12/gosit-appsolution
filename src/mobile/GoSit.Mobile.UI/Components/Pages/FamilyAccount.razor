@@ -1,0 +1,75 @@
+@page "/family/account"
+@inject SessionStore Session
+@inject GoSitApiClient Api
+@inject NavigationManager Nav
+
+@* The family side of Account.razor — same shape, different tab bar. *@
+
+<AppShell Title="Account">
+    <ChildContent>
+        @if (_name is not null)
+        {
+            <div class="card">
+                <p class="card__label">Signed in as</p>
+                <p class="card__title" style="font-size:1.125rem">@_name</p>
+                <p class="card__meta">@_email</p>
+            </div>
+        }
+
+        <div class="card">
+            <p class="card__label">Booking a caregiver</p>
+            <p class="card__meta" style="margin-top:.5rem">
+                Search, messaging and your profile are on the GoSit website — this app is
+                for tracking bookings and paying for them once they are made.
+            </p>
+        </div>
+
+        <button class="btn btn--quiet btn--block" style="margin-top:1rem" @onclick="SignOut">
+            <Icon Name="signout" Size="20" /> Sign out
+        </button>
+
+        <p class="small muted" style="margin-top:1rem;text-align:center">
+            GoSit arranges non-medical care.
+        </p>
+    </ChildContent>
+    <Tabs>
+        <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+        <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+        <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+        <Tab Href="/family/account" Icon="person" Label="Account" />
+    </Tabs>
+</AppShell>
+
+@code {
+    private string? _name;
+    private string? _email;
+
+    private sealed record Me(string FirstName, string LastName, string Email);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (await Api.GetAsync<Me>("/api/v1/me") is { } me)
+            {
+                _name = $"{me.FirstName} {me.LastName}".Trim();
+                _email = me.Email;
+            }
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (Exception ex) when (ex is ApiException or HttpRequestException)
+        {
+            // The identity is a nicety; the sign-out button below is the point of the
+            // screen and must work whether or not this loaded.
+        }
+    }
+
+    private async Task SignOut()
+    {
+        await Session.ClearAsync();
+        Nav.NavigateTo("/login", replace: true);
+    }
+}

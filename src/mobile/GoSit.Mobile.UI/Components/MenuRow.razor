@@ -1,0 +1,24 @@
+@* One row in a sectioned menu: icon, title, optional subtitle, chevron. *@
+
+<a href="@Href" style="display:flex;align-items:center;gap:.75rem;padding:.875rem 0;
+                        text-decoration:none;color:inherit;border-bottom:1px solid var(--color-border)">
+    <span style="color:var(--color-text-secondary)"><Icon Name="@Icon" Size="22" /></span>
+    <span style="flex:1;min-width:0">
+        <span style="display:block;font-weight:600">@Title</span>
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <span class="small muted" style="display:block;margin-top:.125rem">@Subtitle</span>
+        }
+    </span>
+    <span style="color:var(--color-text-secondary)"><Icon Name="chevron" Size="18" /></span>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter] public string? Subtitle { get; set; }
+}

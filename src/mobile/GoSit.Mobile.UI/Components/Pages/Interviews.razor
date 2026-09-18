@@ -1,0 +1,66 @@
+@page "/interviews"
+@inject InterviewService InterviewsApi
+@inject NavigationManager Nav
+
+@* A caregiver's video interviews. Only a family can ask for one — see CLAUDE.md. *@
+
+<AppShell Title="Interviews" Subtitle="Video meetings with families.">
+    @if (_loading)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (_error is not null)
+    {
+        <div class="notice notice--error" role="alert">@_error</div>
+    }
+    else if (_interviews.Count == 0)
+    {
+        <div class="empty">
+            <p style="margin:0 0 .25rem;font-weight:600">No interviews yet</p>
+            <p class="small" style="margin:0">
+                A family may ask to meet before booking. Requests show up here.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="stack">
+            @foreach (var interview in _interviews)
+            {
+                <InterviewRow Interview="interview" Href="@($"/interviews/{interview.Id}")" />
+            }
+        </div>
+    }
+</AppShell>
+
+@code {
+    private List<MobileInterview> _interviews = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _interviews = (await InterviewsApi.ListAsync())
+                .OrderByDescending(i => i.ScheduledStartUtc)
+                .ToList();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

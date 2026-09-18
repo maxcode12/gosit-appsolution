@@ -1,0 +1,52 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+artifacts/
+TestResults/
+coverage/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+playwright-report/
+test-results/
+.playwright/
+
+# Environment & secrets — never commit these
+.env
+.env.local
+.env.*.local
+*.pfx
+*.p12
+appsettings.Local.json
+
+# Editors / OS
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dev run logs
+*.log
+
+# MAUI mobile build output
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+*.apk
+*.aab
+*.ipa
+
+# Loose reference/scratch screenshots dropped at the repo root during development —
+# not shipped assets. The real, in-use assets live under src/**/public and
+# src/mobile/**/Resources.
+/*.png
+/shots/

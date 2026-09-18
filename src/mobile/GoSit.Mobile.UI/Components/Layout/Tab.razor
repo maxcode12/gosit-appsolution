@@ -1,0 +1,47 @@
+@*
+    One destination in the bottom bar.
+
+    NavLink handles the active state, which is the only thing that tells someone where
+    they are — there is no address bar on a phone app.
+*@
+
+<NavLink class="tab" href="@Href" Match="@(Exact ? NavLinkMatch.All : NavLinkMatch.Prefix)">
+    <span class="tab__icon" style="position:relative">
+        <Icon Name="@Icon" Size="24" />
+        @if (EffectiveBadge is > 0)
+        {
+            <span aria-hidden
+                  style="position:absolute;top:-4px;right:-8px;min-width:16px;height:16px;padding:0 3px;
+                         border-radius:8px;background:var(--color-brand-primary);color:var(--color-text-on-brand);
+                         font-size:10px;font-weight:700;line-height:16px;text-align:center">
+                @(EffectiveBadge > 9 ? "9+" : EffectiveBadge)
+            </span>
+        }
+    </span>
+    <span>@Label</span>
+</NavLink>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>True for the home tab, which would otherwise match every route.</summary>
+    [Parameter] public bool Exact { get; set; }
+
+    /// <summary>An unread count, shown as a small badge. Null or zero shows nothing.</summary>
+    [Parameter] public int? Badge { get; set; }
+
+    /// <summary>
+    /// AppShell's own read of the unread count, cascaded to every tab rather than fetched
+    /// once per tab. Used only when this tab points at the inbox and nobody passed an
+    /// explicit <see cref="Badge"/>.
+    /// </summary>
+    [CascadingParameter(Name = "UnreadNotifications")]
+    private int? AmbientUnreadNotifications { get; set; }
+
+    private int? EffectiveBadge =>
+        Badge ?? (Href == "/notifications" ? AmbientUnreadNotifications : null);
+}

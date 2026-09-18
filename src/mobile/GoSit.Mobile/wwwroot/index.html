@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>GoSit</title>
+    <base href="/" />
+    <link rel="stylesheet" href="_content/GoSit.Mobile.UI/css/fonts.css" />
+    <link rel="stylesheet" href="_content/GoSit.Mobile.UI/css/tokens.css" />
+    <link rel="stylesheet" href="_content/GoSit.Mobile.UI/css/app.css" />
+    <link rel="stylesheet" href="GoSit.Mobile.styles.css" />
+    <link rel="icon" href="data:,">
+    <!--
+      Stripe.js must load from Stripe's own domain, not be bundled — that is what keeps
+      GoSit out of PCI SAQ D scope. Everything else that can be self-hosted, is: a phone
+      with a weak signal to a third-party CDN is a much more common failure than one to
+      Stripe or to GoSit's own API, and there is no compliance reason to risk it here.
+    -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="_content/GoSit.Mobile.UI/js/stripe-interop.js"></script>
+    <script src="_content/GoSit.Mobile.UI/js/livekit-client.umd.js"></script>
+    <script src="_content/GoSit.Mobile.UI/js/livekit-interop.js"></script>
+</head>
+
+<body>
+
+
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+</body>
+
+</html>

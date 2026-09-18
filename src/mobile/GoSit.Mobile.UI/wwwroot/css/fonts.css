@@ -1,0 +1,43 @@
+/*
+ * The brand faces, bundled.
+ *
+ * The web app gets these from next/font, which rewrites `--font-jakarta` and
+ * `--font-inter` at build time. Copying tokens.css across brought the *references* to
+ * those variables and none of their values, so every screen fell back to a serif and the
+ * app looked like a different product. These declarations are what make the copy honest.
+ *
+ * Bundled rather than fetched: an app that needs the network to render its own text is an
+ * app that looks broken on a doorstep with one bar. Latin subsets only — around 75 KB for
+ * both, against roughly 400 KB for the full ranges, and Go Sit is Canada-first.
+ *
+ * Both are variable fonts, so one file covers every weight the design uses.
+ */
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../fonts/jakarta-latin.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * The two variables tokens.css expects. Defined here rather than edited into that file so
+ * it stays a byte-for-byte copy of the web app's, and drift between the two clients stays
+ * easy to spot.
+ *
+ * The fallbacks are the platform faces, in order: a WebView that cannot load the bundled
+ * font should land on San Francisco or Roboto, not Times New Roman.
+ */
+:root {
+  --font-jakarta: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-inter: "Inter", -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+}

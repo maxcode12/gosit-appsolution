@@ -1,0 +1,27 @@
+@* A titled group of job cards. *@
+
+<h2 style="margin:1.5rem 0 .75rem;font-size:1.0625rem">@Heading</h2>
+
+<div class="stack">
+    @foreach (var booking in Bookings)
+    {
+        <a class="card" href="@($"/jobs/{booking.Id}")"
+           style="display:block;text-decoration:none;color:inherit">
+            <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start">
+                <div>
+                    <h3 class="card__title" style="font-size:1.0625rem">@booking.CareServiceName</h3>
+                    <p class="card__meta">
+                        for @booking.CareRequesterFirstName · @Format.Window(booking)
+                    </p>
+                </div>
+                <span class="@Format.StatusPill(booking.Status)">@Format.StatusShort(booking.Status)</span>
+            </div>
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Heading { get; set; } = "";
+
+    [Parameter, EditorRequired] public IReadOnlyList<MobileBooking> Bookings { get; set; } = [];
+}

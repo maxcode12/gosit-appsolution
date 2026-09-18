@@ -1,0 +1,18 @@
+@* One booking, in a family's list — the caregiver's name instead of the family's. *@
+
+<a class="card" href="@($"/family/bookings/{Booking.Id}")"
+   style="display:block;text-decoration:none;color:inherit">
+    <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start">
+        <div>
+            <h3 class="card__title" style="font-size:1.0625rem">@Booking.CareServiceName</h3>
+            <p class="card__meta">
+                with @Booking.CaregiverFirstName · @Format.Window(Booking)
+            </p>
+        </div>
+        <span class="@Format.StatusPill(Booking.Status)">@Format.StatusShort(Booking.Status)</span>
+    </div>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public MobileBooking Booking { get; set; } = null!;
+}

@@ -1,0 +1,29 @@
+@* One interview in a list. The other side's name reads the same from either account. *@
+
+<a class="card" href="@Href" style="display:block;text-decoration:none;color:inherit">
+    <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start">
+        <div>
+            <h3 class="card__title" style="font-size:1.0625rem">
+                @Interview.OtherParticipantFirstName@(Interview.OtherParticipantLastInitial is { } initial ? $" {initial}." : "")
+            </h3>
+            <p class="card__meta">
+                @Interview.ScheduledStartUtc.ToLocalTime().ToString("ddd d MMM, h:mm tt") · @Interview.DurationMinutes min
+            </p>
+        </div>
+        <span class="@StatusPill">@Interview.Status</span>
+    </div>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public MobileInterview Interview { get; set; } = null!;
+
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    private string StatusPill => Interview.Status switch
+    {
+        "Accepted" => "pill pill--live",
+        "Requested" => "pill pill--wait",
+        "Completed" => "pill pill--done",
+        _ => "pill pill--off",
+    };
+}

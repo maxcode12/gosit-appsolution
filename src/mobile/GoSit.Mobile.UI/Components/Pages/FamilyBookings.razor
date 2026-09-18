@@ -1,0 +1,105 @@
+@page "/family"
+@inject BookingService Bookings
+@inject NavigationManager Nav
+
+@*
+    A family's bookings — the care-requester side of the same app the caregiver uses.
+
+    Mirrors Jobs.razor's split (coming up / finished), because it is the same question
+    from the other side: "what have I got on" and "what did I pay for".
+*@
+
+<AppShell Title="Bookings" Subtitle="Care you have arranged.">
+    <ChildContent>
+        @if (_loading)
+        {
+            <p class="muted">Loading…</p>
+        }
+        else if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert">@_error</div>
+        }
+        else if (_upcoming.Count == 0 && _past.Count == 0)
+        {
+            <div class="empty">
+                <p style="margin:0 0 .25rem;font-weight:600">No bookings yet</p>
+                <p class="small" style="margin:0">
+                    Find and book a caregiver on the GoSit website — bookings you make
+                    there show up here.
+                </p>
+            </div>
+        }
+        else
+        {
+            @if (_upcoming.Count > 0)
+            {
+                <h2 style="margin:1.5rem 0 .75rem;font-size:1.0625rem">Coming up</h2>
+                <div class="stack">
+                    @foreach (var booking in _upcoming)
+                    {
+                        <BookingRow Booking="booking" />
+                    }
+                </div>
+            }
+
+            @if (_past.Count > 0)
+            {
+                <h2 style="margin:1.5rem 0 .75rem;font-size:1.0625rem">Finished</h2>
+                <div class="stack">
+                    @foreach (var booking in _past)
+                    {
+                        <BookingRow Booking="booking" />
+                    }
+                </div>
+            }
+        }
+    </ChildContent>
+    <Tabs>
+        <Tab Href="/family" Icon="work" Label="Bookings" Exact="true" />
+        <Tab Href="/family/interviews" Icon="video" Label="Interviews" />
+        <Tab Href="/notifications" Icon="bell" Label="Inbox" />
+        <Tab Href="/family/account" Icon="person" Label="Account" />
+    </Tabs>
+</AppShell>
+
+@code {
+    private List<MobileBooking> _upcoming = [];
+    private List<MobileBooking> _past = [];
+    private bool _loading = true;
+    private string? _error;
+
+    private static readonly string[] Closed =
+        ["Completed", "Cancelled", "Declined", "Disputed"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await Bookings.ListAsync();
+
+            _upcoming = all.Where(b => !Closed.Contains(b.Status))
+                .OrderBy(b => b.StartAtUtc)
+                .ToList();
+
+            _past = all.Where(b => Closed.Contains(b.Status))
+                .OrderByDescending(b => b.StartAtUtc)
+                .ToList();
+        }
+        catch (SessionExpiredException)
+        {
+            Nav.NavigateTo("/login");
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "No connection. Try again when you have signal.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

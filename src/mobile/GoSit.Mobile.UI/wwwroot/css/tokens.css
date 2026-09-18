@@ -1,0 +1,234 @@
+/*
+ * Go Sit design tokens — mobile.
+ *
+ * Copied from the web app rather than reimplemented, so the two clients are visibly one
+ * product. If these drift, someone moving between the phone and the site will notice
+ * before any of us do.
+ *
+ * Originally derived from the GoSitly-Wireframe Figma file. The product owner has since
+ * asked for a more modern, public-facing look, so the *values* here have moved on from
+ * the wireframes' preliminary ones while the semantic names have not. That is the point
+ * of the two-tier structure: components reference roles, so a visual refresh is a change
+ * to this file rather than a sweep through every screen.
+ *
+ * Never use raw hex values in components — always reference a token.
+ *
+ * What changed and why:
+ *   - Warm neutrals instead of pure greys. A care product read cold and clinical in
+ *     true grey; a few degrees of warmth is the difference between "hospital" and
+ *     "someone's home".
+ *   - A full brand ramp rather than one teal, so tints can carry meaning without
+ *     resorting to opacity hacks that muddy over coloured backgrounds.
+ *   - Layered, low-opacity shadows tinted with the brand hue. The old single
+ *     30%-black drop shadow is the giveaway of a 2018 interface.
+ *   - A dark theme, because a third of people never see the light one.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Brand ramp -------------------------------------------------------- */
+  --gosit-teal-50: #eefbfa;
+  --gosit-teal-100: #d3f5f3;
+  --gosit-teal-200: #a9eae9;
+  --gosit-teal-300: #71d8da;
+  --gosit-teal-400: #37bec3;
+  --gosit-teal-500: #16a3aa;
+  --gosit-teal-600: #0d838c;
+  --gosit-teal-700: #0f6871;
+  --gosit-teal-800: #12545c;
+  --gosit-teal-900: #14474e;
+  --gosit-teal-950: #042f35;
+
+  /* Warm accent — the wireframes' orange, brought into a usable ramp. */
+  --gosit-amber-50: #fff8ed;
+  --gosit-amber-100: #ffefd4;
+  --gosit-amber-200: #ffdba8;
+  --gosit-amber-300: #ffc071;
+  --gosit-amber-400: #ff9c38;
+  --gosit-amber-500: #fd7f12;
+  --gosit-amber-600: #ee6308;
+  --gosit-amber-700: #c54a09;
+  --gosit-amber-800: #9c3a10;
+  --gosit-amber-900: #7e3210;
+
+  /* ---- Warm neutrals ----------------------------------------------------- */
+  --gosit-sand-50: #fbfaf9;
+  --gosit-sand-100: #f5f3f0;
+  --gosit-sand-200: #eae6e1;
+  --gosit-sand-300: #d9d3cb;
+  --gosit-sand-400: #b4aca1;
+  --gosit-sand-450: #746b5f;
+  --gosit-sand-500: #8d8478;
+  --gosit-sand-600: #6f665c;
+  --gosit-sand-700: #574f47;
+  --gosit-sand-800: #3a352f;
+  --gosit-sand-900: #23201c;
+  --gosit-sand-950: #16130f;
+
+  --gosit-white: #ffffff;
+
+  /* Feedback hues, tuned to sit beside the warm neutrals. */
+  --gosit-rose-50: #fef2f2;
+  --gosit-rose-500: #e5484d;
+  --gosit-rose-600: #ce2c31;
+  --gosit-rose-700: #a91d22;
+  --gosit-green-50: #edfaf3;
+  --gosit-green-600: #12864c;
+
+  /* ---- Semantic tokens — the only ones components should reference -------- */
+  --color-brand-primary: var(--gosit-teal-600);
+  --color-brand-primary-hover: var(--gosit-teal-700);
+  --color-brand-soft: var(--gosit-teal-50);
+  --color-brand-soft-border: var(--gosit-teal-200);
+  --color-brand-secondary: var(--gosit-amber-500);
+  --color-brand-secondary-hover: var(--gosit-amber-600);
+  --color-brand-accent: var(--gosit-amber-400);
+  --color-accent-soft: var(--gosit-amber-50);
+  --color-nav-accent: var(--gosit-amber-500);
+
+  --color-canvas: var(--gosit-sand-100);
+  --color-surface: var(--gosit-white);
+  --color-surface-muted: var(--gosit-sand-100);
+  --color-surface-raised: var(--gosit-white);
+  --color-border: var(--gosit-sand-200);
+  --color-border-strong: var(--gosit-sand-300);
+
+  --color-text-primary: var(--gosit-sand-900);
+  --color-text-secondary: var(--gosit-sand-600);
+  /*
+   * Measured, not eyeballed: sand-500 came out at 3.32:1 on the canvas, below the 4.5:1
+   * AA floor for body text. Muted text is where contrast quietly fails, because it
+   * looks "intentionally quiet" right up until someone cannot read it.
+   */
+  --color-text-muted: var(--gosit-sand-450);
+  --color-text-on-brand: var(--gosit-white);
+  --color-text-placeholder: var(--gosit-sand-400);
+
+  --color-danger-accent: var(--gosit-rose-600);
+  --color-danger-soft: var(--gosit-rose-50);
+  --color-success-accent: var(--gosit-green-600);
+  --color-success-soft: var(--gosit-green-50);
+
+  /*
+   * A deliberately dark brand panel, identical in both themes.
+   *
+   * Deep surfaces like the caregiver call-to-action want white text in every theme. If
+   * they used --color-brand-primary they would flip to pale teal under dark mode and
+   * take white text with them, which is unreadable. These two are the exception that
+   * does not invert, and they are only for full-bleed panels.
+   */
+  --color-brand-deep: var(--gosit-teal-800);
+  --color-text-on-deep: var(--gosit-teal-50);
+
+  /*
+   * The accent for those same panels — and for text over a photograph, where the ground
+   * is an image rather than the page and does not change with the palette. Bright enough
+   * to carry on a dark scrim, which --color-brand-primary is not in the light theme.
+   */
+  --color-accent-on-deep: var(--gosit-teal-300);
+
+  /* ---- Radii ------------------------------------------------------------- */
+  --radius-control: 0.75rem;
+  --radius-card: 1.25rem;
+  --radius-field: 0.875rem;
+  --radius-auth-card: 1.75rem;
+  --radius-pill: 9999px;
+
+  /*
+   * ---- Elevation --------------------------------------------------------
+   * Two stacked shadows each: a tight contact shadow that grounds the element and a
+   * wide diffuse one that lifts it. Tinted with the brand hue rather than pure black,
+   * which is what stops a card looking like a cut-out.
+   *
+   * Named in the raw tier because `--shadow-*` is Tailwind's theme namespace, and a
+   * semantic token of the same name would reference itself.
+   */
+  --gosit-shadow-xs: 0 1px 2px rgba(20, 71, 78, 0.05);
+  --gosit-shadow-sm: 0 1px 2px rgba(20, 71, 78, 0.06), 0 1px 3px rgba(20, 71, 78, 0.05);
+  --gosit-shadow-md: 0 2px 4px rgba(20, 71, 78, 0.05), 0 6px 16px -4px rgba(20, 71, 78, 0.1);
+  --gosit-shadow-lg: 0 4px 8px rgba(20, 71, 78, 0.05), 0 16px 32px -8px rgba(20, 71, 78, 0.14);
+  --gosit-shadow-brand: 0 1px 2px rgba(13, 131, 140, 0.2), 0 8px 20px -6px rgba(13, 131, 140, 0.35);
+  --gosit-shadow-auth-card: var(--gosit-shadow-lg);
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  /*
+   * ---- Typography -------------------------------------------------------
+   * Roles rather than font names, so a family swap is a change here.
+   *
+   * Two families, not three. Plus Jakarta Sans has the slightly rounded, humanist
+   * shapes that suit a care product for headings; Inter is the most legible thing
+   * available at small sizes and carries body and controls. The wireframes' Roboto,
+   * Raleway and Open Sans trio read dated and gave three different voices to one
+   * product.
+   */
+  --font-role-heading: var(--font-jakarta);
+  --font-role-control: var(--font-inter);
+  --font-role-body: var(--font-inter);
+}
+
+/*
+ * Dark theme. Surfaces lift as they come forward rather than darkening, which is what
+ * makes depth legible without borders doing all the work.
+ *
+ * Keyed on an explicit attribute rather than `prefers-color-scheme`, because someone
+ * choosing dark on a light machine has to be able to get it. The attribute is written
+ * before first paint by the script in app/layout.tsx, which resolves "system" against
+ * the OS — so following the OS is still the default, it just arrives by a different
+ * route.
+ *
+ * The consequence, stated rather than hidden: with JavaScript disabled the attribute is
+ * never written and the light theme is what everyone gets. That is a preference lost,
+ * not a function — nothing here is unreadable in light — and it buys a toggle that
+ * actually works and a first paint that never flashes the wrong palette.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-brand-primary: var(--gosit-teal-400);
+  --color-brand-primary-hover: var(--gosit-teal-300);
+  --color-brand-soft: rgba(55, 190, 195, 0.12);
+  --color-brand-soft-border: rgba(55, 190, 195, 0.3);
+  --color-brand-secondary: var(--gosit-amber-400);
+  --color-brand-secondary-hover: var(--gosit-amber-300);
+  --color-brand-accent: var(--gosit-amber-300);
+  --color-accent-soft: rgba(255, 156, 56, 0.12);
+  --color-nav-accent: var(--gosit-amber-400);
+
+  --color-canvas: var(--gosit-sand-950);
+  --color-surface: #1c1916;
+  --color-surface-muted: #242019;
+  --color-surface-raised: #2a251f;
+  --color-border: #37312a;
+  --color-border-strong: #4a423a;
+
+  --color-text-primary: var(--gosit-sand-50);
+  --color-text-secondary: #b8afa4;
+  --color-text-muted: #8d8478;
+  --color-text-on-brand: var(--gosit-sand-950);
+  --color-text-placeholder: #6f665c;
+
+  --color-danger-accent: #ff6369;
+  --color-danger-soft: rgba(229, 72, 77, 0.12);
+  --color-success-accent: #4cc38a;
+  --color-success-soft: rgba(76, 195, 138, 0.12);
+
+  /* Shadows read as almost nothing on a dark ground; depth comes from surfaces. */
+  --gosit-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --gosit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --gosit-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --gosit-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --gosit-shadow-brand: 0 8px 20px -6px rgba(55, 190, 195, 0.3);
+}
+
+/* Respect a system preference for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}

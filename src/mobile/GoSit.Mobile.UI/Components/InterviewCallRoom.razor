@@ -1,0 +1,139 @@
+@inject InterviewService Interviews
+@inject IJSRuntime JS
+
+@*
+    The call itself: consent, then video, for either side of it.
+
+    Consent is asked here rather than assumed from a setting, matching the API — see
+    InterviewService.JoinAsync. Declining does not join a muted or camera-off call, it
+    joins nothing at all.
+*@
+
+@if (!_inCall)
+{
+    <div class="card">
+        <p class="card__label">Before you join</p>
+        <p style="margin:.5rem 0 0">
+            This interview is recorded. Recordings are reviewed only by GoSit's Trust and
+            Safety team and deleted after 90 days.
+        </p>
+
+        <label style="display:flex;align-items:flex-start;gap:.5rem;margin-top:.75rem;cursor:pointer">
+            <input type="checkbox" @bind="_consented" style="margin-top:.2rem" />
+            <span class="small">I agree to this interview being recorded.</span>
+        </label>
+
+        @if (_error is not null)
+        {
+            <div class="notice notice--error" role="alert" style="margin-top:.75rem">@_error</div>
+        }
+
+        @if (!Interview.CanJoin)
+        {
+            <p class="small muted" style="margin-top:.75rem">
+                @(DateTime.UtcNow < Interview.JoinOpensAtUtc
+                    ? $"You can join starting {Format.LocalTimeOf(Interview.JoinOpensAtUtc)}."
+                    : "This interview cannot be joined right now.")
+            </p>
+        }
+        else
+        {
+            <button class="btn btn--primary btn--block" style="margin-top:.75rem"
+                    disabled="@(!_consented || _joining)" @onclick="Join">
+                @(_joining ? "Joining…" : "Join the call")
+            </button>
+        }
+    </div>
+}
+else
+{
+    <div class="card">
+        <video id="@LocalVideoId" autoplay playsinline
+               style="width:100%;border-radius:12px;background:#000"></video>
+        <div id="@RemoteContainerId" style="margin-top:.5rem"></div>
+
+        <div style="display:flex;gap:.5rem;margin-top:.75rem">
+            <button class="btn btn--quiet" style="flex:1" @onclick="ToggleMic">
+                @(_micOn ? "Mute" : "Unmute")
+            </button>
+            <button class="btn btn--quiet" style="flex:1" @onclick="ToggleCamera">
+                @(_cameraOn ? "Stop video" : "Start video")
+            </button>
+            <button class="btn btn--secondary" style="flex:1" @onclick="Leave">
+                Leave
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public MobileInterview Interview { get; set; } = null!;
+
+    [Parameter] public EventCallback OnLeft { get; set; }
+
+    private readonly string LocalVideoId = $"lk-local-{Guid.NewGuid():N}";
+    private readonly string RemoteContainerId = $"lk-remote-{Guid.NewGuid():N}";
+
+    private bool _consented;
+    private bool _joining;
+    private bool _inCall;
+    private bool _micOn = true;
+    private bool _cameraOn = true;
+    private string? _error;
+
+    private async Task Join()
+    {
+        _joining = true;
+        _error = null;
+
+        try
+        {
+            var ticket = await Interviews.JoinAsync(Interview.Id, _consented);
+
+            if (ticket is null)
+            {
+                _error = "Something went wrong. Please try again.";
+                return;
+            }
+
+            _inCall = true;
+            StateHasChanged();
+
+            // The video elements only exist once this render commits.
+            await Task.Yield();
+            await JS.InvokeVoidAsync(
+                "gositLiveKit.connect", ticket.ServerUrl, ticket.Token, LocalVideoId, RemoteContainerId);
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach GoSit. Check your connection and try again.";
+        }
+        finally
+        {
+            _joining = false;
+        }
+    }
+
+    private async Task ToggleMic()
+    {
+        _micOn = !_micOn;
+        await JS.InvokeVoidAsync("gositLiveKit.setMicEnabled", _micOn);
+    }
+
+    private async Task ToggleCamera()
+    {
+        _cameraOn = !_cameraOn;
+        await JS.InvokeVoidAsync("gositLiveKit.setCameraEnabled", _cameraOn);
+    }
+
+    private async Task Leave()
+    {
+        await JS.InvokeVoidAsync("gositLiveKit.disconnect");
+        _inCall = false;
+        await OnLeft.InvokeAsync();
+    }
+}
