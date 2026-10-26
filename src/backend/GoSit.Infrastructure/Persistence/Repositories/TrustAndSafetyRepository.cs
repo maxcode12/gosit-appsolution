@@ -126,6 +126,12 @@ public sealed class VerificationRepository(GoSitDbContext context) : IVerificati
     public Task<VerificationCase?> FindByIdAsync(Guid caseId, CancellationToken cancellationToken) =>
         context.VerificationCases.SingleOrDefaultAsync(c => c.Id == caseId, cancellationToken);
 
+    public Task<VerificationCase?> FindByProviderReferenceAsync(
+        string providerReference,
+        CancellationToken cancellationToken) =>
+        context.VerificationCases.SingleOrDefaultAsync(
+            c => c.ProviderReference == providerReference, cancellationToken);
+
     public async Task<IReadOnlyList<VerificationCase>> ListForCaregiverAsync(
         Guid caregiverProfileId,
         CancellationToken cancellationToken) =>
@@ -192,16 +198,23 @@ public sealed class UnconfiguredBackgroundCheckProvider(
 {
     public bool IsConfigured => false;
 
+    public bool CanInitiate(VerificationCheckType checkType) => false;
+
     public Task<string?> InitiateAsync(
-        Guid caregiverProfileId,
+        BackgroundCheckApplicant applicant,
         VerificationCheckType checkType,
         CancellationToken cancellationToken)
     {
         logger.LogInformation(
             "No background-check provider is configured; {CheckType} for caregiver "
             + "{CaregiverProfileId} awaits a manual decision",
-            checkType, caregiverProfileId);
+            checkType, applicant.CaregiverProfileId);
 
         return Task.FromResult<string?>(null);
     }
+
+    public Task<BackgroundCheckOutcome?> GetOutcomeAsync(
+        string providerReference,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<BackgroundCheckOutcome?>(null);
 }

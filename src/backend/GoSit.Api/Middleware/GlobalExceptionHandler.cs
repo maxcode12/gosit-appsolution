@@ -56,6 +56,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                     httpContext.Request.Method, httpContext.Request.Path);
                 return Problem(StatusCodes.Status403Forbidden, exception.Message);
 
+            case ExternalServiceException:
+                logger.LogWarning("An outside service failed for {Method} {Path}",
+                    httpContext.Request.Method, httpContext.Request.Path);
+                return Problem(StatusCodes.Status503ServiceUnavailable, exception.Message);
+
             case NotFoundException:
                 return Problem(StatusCodes.Status404NotFound, exception.Message);
 

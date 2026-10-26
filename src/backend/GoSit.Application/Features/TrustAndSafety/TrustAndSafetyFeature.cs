@@ -139,6 +139,7 @@ public sealed class SubmitVerificationValidator : AbstractValidator<SubmitVerifi
 public sealed class SubmitVerificationHandler(
     IVerificationRepository verifications,
     ICaregiverProfileRepository caregiverProfiles,
+    IUserRepository users,
     IBackgroundCheckProvider backgroundChecks,
     IUnitOfWork unitOfWork,
     IAuditTrail audit,
@@ -169,14 +170,17 @@ public sealed class SubmitVerificationHandler(
         var verificationCase = VerificationCase.Submit(
             caregiver.Id, command.CheckType, command.DocumentReference, utcNow);
 
-        // A real provider would take it from here. Until one is chosen the case simply
-        // waits for a staff decision — see IBackgroundCheckProvider.
-        if (backgroundChecks.IsConfigured
-            && command.CheckType is VerificationCheckType.BackgroundCheck
-                or VerificationCheckType.VulnerableSector)
+        // A provider takes the checks it offers from here; everything else waits for a staff
+        // decision, as it does with no provider at all — see IBackgroundCheckProvider.
+        if (backgroundChecks.IsConfigured && backgroundChecks.CanInitiate(command.CheckType))
         {
+            var account = await users.FindByIdAsync(userId, cancellationToken)
+                ?? throw new NotFoundException("The account no longer exists.");
+
             var reference = await backgroundChecks.InitiateAsync(
-                caregiver.Id, command.CheckType, cancellationToken);
+                new BackgroundCheckApplicant(caregiver.Id, account.Email),
+                command.CheckType,
+                cancellationToken);
 
             verificationCase.BeginReview(reference, utcNow);
         }

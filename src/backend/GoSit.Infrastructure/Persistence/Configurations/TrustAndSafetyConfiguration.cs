@@ -96,7 +96,12 @@ public sealed class VerificationCaseConfiguration : IEntityTypeConfiguration<Ver
         builder.Property(c => c.DocumentReference).HasMaxLength(500);
 
         builder.Property(c => c.ProviderReference).HasMaxLength(255);
+        builder.Property(c => c.ProviderStatus).HasMaxLength(64);
+        builder.Property(c => c.ProviderScore).HasMaxLength(32);
         builder.Property(c => c.DecisionNotes).HasMaxLength(1000);
+
+        // Webhooks find their case by the provider's reference.
+        builder.HasIndex(c => c.ProviderReference);
         builder.Property(c => c.SubmittedAtUtc).IsRequired();
         builder.Property(c => c.Version).IsRequired().IsConcurrencyToken();
 

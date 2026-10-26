@@ -57,6 +57,8 @@ export function VerificationQueue({ cases }: { cases: PendingVerification[] }) {
               : "Optional. Clearing it does not by itself make this caregiver visible to families."}
           </p>
 
+          <ProviderReport status={pending.providerStatus} score={pending.providerScore} />
+
           <DecisionPanel
             approve={() => approveVerificationAction(pending.caseId)}
             reject={rejectVerificationAction.bind(null, pending.caseId)}
@@ -68,5 +70,64 @@ export function VerificationQueue({ cases }: { cases: PendingVerification[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Certn's progress words, in plain English. Anything unrecognised is shown as Certn sent it. */
+const PROVIDER_STATUS_LABELS: Record<string, string> = {
+  CASE_ORDERED: "Ordered. Waiting for the caregiver to be emailed.",
+  APPLICANT_INVITED: "The caregiver has been emailed and has not started.",
+  APPLICANT_OPENED: "The caregiver opened the email but has not started.",
+  APPLICANT_STARTED: "The caregiver has started their application.",
+  APPLICANT_SUBMITTED: "The caregiver has submitted. Checks are running.",
+  APPLICANT_EXPIRED: "The caregiver did not finish in time.",
+  INVITE_UNDELIVERABLE: "The email to the caregiver bounced.",
+  IN_PROGRESS: "Checks are running.",
+  APPLICANT_ACTION_REQUIRED: "Waiting on the caregiver for more information.",
+  CLIENT_ACTION_REQUIRED: "Certn needs something from GoSit. Check the Certn portal.",
+  IN_DISPUTE: "The caregiver is disputing a result.",
+  CANCELLED: "Cancelled.",
+  COMPLETE: "Finished.",
+};
+
+const SCORE_LABELS: Record<string, { text: string; tone: string }> = {
+  CLEAR: { text: "Clear. No issues found.", tone: "text-brand-primary" },
+  REVIEW: { text: "Needs a closer look. Open the report in Certn.", tone: "text-danger-accent" },
+  REJECT: { text: "Adverse findings. Open the report in Certn.", tone: "text-danger-accent" },
+  NOT_APPLICABLE: { text: "No score applies to this check.", tone: "text-text-secondary" },
+  RESTRICTED: { text: "Certn has restricted this result. Open it in Certn.", tone: "text-danger-accent" },
+};
+
+/**
+ * What the screening provider has said about this check.
+ *
+ * Shown beside the decision because it is the evidence for it, and labelled as evidence
+ * because a clear score is not an approval: the reviewer still decides, and the full report
+ * stays with the provider rather than being copied into GoSit.
+ */
+function ProviderReport({ status, score }: { status?: string | null; score?: string | null }) {
+  if (!status && !score) {
+    return null;
+  }
+
+  const verdict = score ? SCORE_LABELS[score] : undefined;
+
+  return (
+    <div className="mt-3 rounded-control border border-border bg-surface-muted px-4 py-3 text-sm">
+      <p className="font-control text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        Screening provider
+      </p>
+      {status ? (
+        <p className="mt-1 text-text-primary">{PROVIDER_STATUS_LABELS[status] ?? status}</p>
+      ) : null}
+      {score ? (
+        <p className={`mt-1 font-medium ${verdict?.tone ?? "text-text-primary"}`}>
+          {verdict?.text ?? score}
+        </p>
+      ) : null}
+      <p className="mt-2 text-xs text-text-secondary">
+        This is evidence, not an approval. You make the decision.
+      </p>
+    </div>
   );
 }

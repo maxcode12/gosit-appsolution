@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buttonClassName } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Wordmark } from "@/components/ui/wordmark";
+import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
 
 const LINKS = [
   { href: "#care", label: "Types of care" },
@@ -40,15 +41,26 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link
-            href="/login"
-            className="hidden rounded-control px-3 py-2 font-control text-sm font-semibold text-text-primary transition-colors hover:text-brand-primary sm:block"
-          >
-            Log in
-          </Link>
-          <Link href="/signup" className={buttonClassName("primary", "", "sm")}>
-            Get started
-          </Link>
+          {MARKETING_ONLY ? (
+            <a
+              href={CONTACT_ANCHOR}
+              className={buttonClassName("primary", "", "sm")}
+            >
+              Contact us
+            </a>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-control px-3 py-2 font-control text-sm font-semibold text-text-primary transition-colors hover:text-brand-primary sm:block"
+              >
+                Log in
+              </Link>
+              <Link href="/signup" className={buttonClassName("primary", "", "sm")}>
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -6,7 +6,9 @@ import { ShieldIcon, StarIcon } from "@/components/ui/icons";
 import { SiteFooter } from "@/features/marketing/components/site-footer";
 import { HeroSearch } from "@/features/marketing/components/hero-search";
 import { AppShowcase } from "@/features/marketing/components/app-showcase";
+import { ContactSection } from "@/features/marketing/components/contact-section";
 import { SiteHeader } from "@/features/marketing/components/site-header";
+import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
 
 export const metadata: Metadata = {
   // Absolute, or the root layout's "%s | GoSit" template appends the brand to a title
@@ -41,6 +43,7 @@ export default function LandingPage() {
         <TrustAndSafety />
         <CaregiverApp />
         <ForCaregivers />
+        {MARKETING_ONLY ? <ContactSection /> : null}
       </main>
 
       <SiteFooter />
@@ -117,15 +120,17 @@ function Hero() {
 
             <HeroSearch />
 
-            <p className="mt-4 text-sm text-text-on-deep/70">
-              Free to join. No charge until a caregiver confirms your booking.{" "}
-              <Link
-                href="/signup"
-                className="underline underline-offset-2 hover:text-text-on-deep"
-              >
-                Work as a caregiver
-              </Link>
-            </p>
+            {MARKETING_ONLY ? null : (
+              <p className="mt-4 text-sm text-text-on-deep/70">
+                Free to join. No charge until a caregiver confirms your booking.{" "}
+                <Link
+                  href="/signup"
+                  className="underline underline-offset-2 hover:text-text-on-deep"
+                >
+                  Work as a caregiver
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -458,9 +463,18 @@ function ForCaregivers() {
               </p>
 
               <div className="mt-8">
-                <Link href="/signup" className={buttonClassName("secondary", "", "lg")}>
-                  Join as a caregiver
-                </Link>
+                {MARKETING_ONLY ? (
+                  <a
+                    href={CONTACT_ANCHOR}
+                    className={buttonClassName("secondary", "", "lg")}
+                  >
+                    Register your interest as a caregiver
+                  </a>
+                ) : (
+                  <Link href="/signup" className={buttonClassName("secondary", "", "lg")}>
+                    Join as a caregiver
+                  </Link>
+                )}
               </div>
             </div>
 

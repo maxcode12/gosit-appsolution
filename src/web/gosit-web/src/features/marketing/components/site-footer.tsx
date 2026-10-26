@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
+import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
 
 /**
  * The public footer.
@@ -41,13 +42,20 @@ export function SiteFooter() {
                 { href: "#caregivers", label: "Become a caregiver" },
               ]}
             />
-            <FooterColumn
-              title="Account"
-              links={[
-                { href: "/login", label: "Log in" },
-                { href: "/signup", label: "Create an account" },
-              ]}
-            />
+            {MARKETING_ONLY ? (
+              <FooterColumn
+                title="Contact"
+                links={[{ href: CONTACT_ANCHOR, label: "Send us a message" }]}
+              />
+            ) : (
+              <FooterColumn
+                title="Account"
+                links={[
+                  { href: "/login", label: "Log in" },
+                  { href: "/signup", label: "Create an account" },
+                ]}
+              />
+            )}
           </div>
         </div>
 
@@ -59,7 +67,8 @@ export function SiteFooter() {
             care, speak to a licensed provider.
           </p>
           <p className="mt-4 text-sm text-text-muted">
-            © {new Date().getFullYear()} GoSit. Made in Ontario.
+            © {new Date().getFullYear()} 11419056 Canada Inc., operating as GoSit. Made in
+            Ontario.
           </p>
         </div>
       </div>

@@ -21,5 +21,8 @@ public sealed class ForbiddenException(string message) : Exception(message);
 /// <summary>The request conflicts with existing state. Maps to 409.</summary>
 public sealed class ConflictException(string message) : Exception(message);
 
+/// <summary>A service GoSit depends on did not answer or refused. Maps to 503, so callers can retry.</summary>
+public sealed class ExternalServiceException(string message) : Exception(message);
+
 /// <summary>The requested resource does not exist, or is not visible to the caller. Maps to 404.</summary>
 public sealed class NotFoundException(string message) : Exception(message);

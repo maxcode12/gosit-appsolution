@@ -25,6 +25,7 @@ export function adminNav(counts?: {
   disputes?: number;
   flaggedMessages?: number;
   reportedReviews?: number;
+  enquiries?: number;
 }): NavItem[] {
   return [
     { href: "/admin", label: "Overview", icon: <ChartIcon /> },
@@ -79,6 +80,13 @@ export function adminNav(counts?: {
       // identical icons in the rail would be a coin toss.
       icon: <StarIcon filled />,
       badge: counts?.reportedReviews,
+      badgeLabel: "waiting",
+    },
+    {
+      href: "/admin/enquiries",
+      label: "Enquiries",
+      icon: <InboxIcon />,
+      badge: counts?.enquiries,
       badgeLabel: "waiting",
     },
     // No badge, for the same reason as promo codes: recordings are looked up when a

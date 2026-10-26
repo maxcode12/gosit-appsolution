@@ -111,6 +111,13 @@ public class GoSitApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             ["Stripe:WebhookToleranceSeconds"] = "300",
             ["Payments:CommissionRate"] = "0.15",
             ["RateLimiting:AuthWindowSeconds"] = "60",
+            // The contact form is exercised heavily from one client; its throttle gets its own
+            // test (EnquiryRateLimitTests), and the allowed website is named explicitly.
+            ["RateLimiting:FormPermitLimit"] = "100000",
+            ["Cors:PublicFormOrigins"] = "https://www.gosits.test",
+            // Sign-up is closed by default everywhere but Development. Spelled out here so
+            // the suite does not depend on that file; ClosedRegistrationTests overrides it.
+            ["Registration:Open"] = "true",
         };
 
         foreach (var (key, value) in settings.Concat(SettingOverrides))

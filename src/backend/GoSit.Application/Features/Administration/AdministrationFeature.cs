@@ -42,7 +42,11 @@ public sealed record PendingVerification(
     string CaregiverAccountStatus,
     string CheckType,
     string Status,
-    DateTime SubmittedAtUtc);
+    DateTime SubmittedAtUtc,
+
+    /// <summary>What the screening provider says, if one is handling this check. Evidence only.</summary>
+    string? ProviderStatus = null,
+    string? ProviderScore = null);
 
 public sealed record ListOpenIncidentsQuery(int Take = 50) : IQuery<IReadOnlyList<AdminIncident>>;
 
@@ -251,7 +255,9 @@ public sealed class ListPendingVerificationsHandler(
                     caregiver.Status,
                     c.CheckType.ToString(),
                     c.Status.ToString(),
-                    c.SubmittedAtUtc);
+                    c.SubmittedAtUtc,
+                    c.ProviderStatus,
+                    c.ProviderScore);
             })
             .ToList();
     }

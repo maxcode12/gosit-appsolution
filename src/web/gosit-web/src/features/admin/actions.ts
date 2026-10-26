@@ -500,3 +500,22 @@ export async function moderateReviewAction(
 
   return { done: true };
 }
+
+/**
+ * Closes a contact-form message: answered, or not a real enquiry. Both stay on record, so
+ * a run of spam is visible rather than quietly deleted.
+ */
+export async function closeEnquiryAction(
+  enquiryId: string,
+  outcome: "handled" | "spam",
+): Promise<AdminFormState> {
+  try {
+    await apiSend(`/api/v1/admin/enquiries/${enquiryId}/${outcome}`, { method: "POST" });
+  } catch (error) {
+    return toState(error, "We could not update this message.");
+  }
+
+  revalidatePath("/admin/enquiries");
+
+  return { done: true };
+}

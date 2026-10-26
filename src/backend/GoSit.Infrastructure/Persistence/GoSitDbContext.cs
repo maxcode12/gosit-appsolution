@@ -6,6 +6,7 @@ using GoSit.Domain.CareRequesters;
 using GoSit.Domain.CareServices;
 using GoSit.Domain.Caregivers;
 using GoSit.Domain.Common;
+using GoSit.Domain.Enquiries;
 using GoSit.Domain.Messaging;
 using GoSit.Domain.Notifications;
 using GoSit.Domain.Payments;
@@ -93,6 +94,8 @@ public sealed class GoSitDbContext(
     public DbSet<VerificationCase> VerificationCases => Set<VerificationCase>();
 
     public DbSet<IncidentReport> IncidentReports => Set<IncidentReport>();
+
+    public DbSet<Enquiry> Enquiries => Set<Enquiry>();
 
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
 

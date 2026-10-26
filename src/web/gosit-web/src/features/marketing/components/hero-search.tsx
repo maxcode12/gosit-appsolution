@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClassName } from "@/components/ui/button";
+import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
 
 /**
  * "Where do you need care?" — the one thing a family can do on the front page.
@@ -17,6 +18,24 @@ import { Button } from "@/components/ui/button";
  */
 export function HeroSearch() {
   const router = useRouter();
+
+  // Search leads to sign-up, which is not open on the public brochure build.
+  if (MARKETING_ONLY) {
+    return (
+      <div className="mt-8 flex flex-col gap-3 rounded-card bg-surface/95 p-4 shadow-lg backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <p className="font-control text-sm font-medium text-text-primary">
+          Families, caregivers and partners: tell us what you need and we will be in
+          touch.
+        </p>
+        <a
+          href={CONTACT_ANCHOR}
+          className={buttonClassName("primary", "h-12 sm:w-auto", "lg")}
+        >
+          Contact us
+        </a>
+      </div>
+    );
+  }
 
   function search(formData: FormData) {
     const postalCode = String(formData.get("postalCode") ?? "").trim().toUpperCase();

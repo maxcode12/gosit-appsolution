@@ -2,6 +2,7 @@ import "server-only";
 
 import { ApiError, apiFetch } from "@/lib/api/client";
 import type {
+  AdminEnquiry,
   AdminIncident,
   AdminInterview,
   FlaggedMessage,
@@ -46,6 +47,10 @@ export function listPendingInsurance(): Promise<PendingInsurance[]> {
 
 export function listOpenIncidents(): Promise<AdminIncident[]> {
   return queue<AdminIncident>("/api/v1/admin/incidents");
+}
+
+export function listEnquiries(): Promise<AdminEnquiry[]> {
+  return queue<AdminEnquiry>("/api/v1/admin/enquiries");
 }
 
 export function listPromoCodes(): Promise<AdminPromoCode[]> {

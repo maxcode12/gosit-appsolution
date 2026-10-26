@@ -76,7 +76,35 @@ try
                     Window = TimeSpan.FromSeconds(rateLimits.WebhookWindowSeconds),
                     QueueLimit = 0,
                 }));
+
+        // The public contact form takes anonymous input from anywhere.
+        options.AddPolicy(RateLimitPolicies.PublicForm, context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = rateLimits.FormPermitLimit,
+                    Window = TimeSpan.FromSeconds(rateLimits.FormWindowSeconds),
+                    QueueLimit = 0,
+                }));
     });
+
+    // Cross-site permission is granted to named websites and to one policy only. The web
+    // app calls the API from its own server, and the mobile apps are not browsers, so
+    // nothing else needs it. With no origins configured, no website is allowed.
+    var formOrigins = (builder.Configuration["Cors:PublicFormOrigins"] ?? string.Empty)
+        .Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    builder.Services.AddCors(options => options.AddPolicy(CorsPolicies.PublicForms, policy =>
+    {
+        if (formOrigins.Length > 0)
+        {
+            policy.WithOrigins(formOrigins)
+                .WithMethods("POST")
+                .WithHeaders("Content-Type")
+                .SetPreflightMaxAge(TimeSpan.FromHours(1));
+        }
+    }));
 
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -117,11 +145,15 @@ try
 
     await using (var scope = app.Services.CreateAsyncScope())
     {
-        if (app.Environment.IsDevelopment())
+        // Development always migrates (local runs and the integration tests). A deployment
+        // migrates only when Database:MigrateOnStartup is set: either the release pipeline
+        // applies migrations before the app starts and leaves it off, or the database is on a
+        // private network the pipeline cannot reach and the app does it itself. EF Core takes
+        // a database lock while migrating, so several instances starting at once queue up
+        // rather than racing.
+        if (app.Environment.IsDevelopment()
+            || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
         {
-            // Convenience for local runs and integration tests only. Deployed
-            // environments apply migrations from the release pipeline before the app
-            // starts, so scaled-out instances never race each other on schema changes.
             await scope.ServiceProvider.GetRequiredService<GoSitDbContext>()
                 .Database.MigrateAsync();
         }
@@ -151,6 +183,7 @@ try
 
     app.UseHttpsRedirection();
     app.UseRateLimiter();
+    app.UseCors();
     app.UseAuthentication();
     app.UseAuthorization();
 
@@ -195,6 +228,15 @@ public static class RateLimitPolicies
 
     /// <summary>Guards the provider webhook endpoint, which is necessarily anonymous.</summary>
     public const string Webhook = "webhook";
+
+    /// <summary>Guards the public contact form.</summary>
+    public const string PublicForm = "public-form";
+}
+
+public static class CorsPolicies
+{
+    /// <summary>The public website's contact form. See Cors:PublicFormOrigins.</summary>
+    public const string PublicForms = "public-forms";
 }
 
 // Exposed for WebApplicationFactory-based integration tests.

@@ -50,3 +50,6 @@ bld/
 # src/mobile/**/Resources.
 /*.png
 /shots/
+
+# Public brochure-site build output (scripts/build-marketing-site.mjs)
+/.marketing-build/

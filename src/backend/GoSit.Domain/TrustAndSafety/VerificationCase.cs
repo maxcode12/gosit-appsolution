@@ -61,6 +61,21 @@ public sealed class VerificationCase : Entity
     /// <summary>Reference at the background-check provider, once one is wired up.</summary>
     public string? ProviderReference { get; private set; }
 
+    /// <summary>
+    /// Where the provider says the check has got to, in its own words. Evidence for the
+    /// reviewer, never a decision: only staff can approve or reject a case.
+    /// </summary>
+    public string? ProviderStatus { get; private set; }
+
+    /// <summary>
+    /// The provider's verdict once it has one (for example "CLEAR" or "REVIEW"). Shown to
+    /// staff beside the case. Deliberately not the report itself, which stays with the
+    /// provider.
+    /// </summary>
+    public string? ProviderScore { get; private set; }
+
+    public DateTime? ProviderUpdatedAtUtc { get; private set; }
+
     /// <summary>Staff member who decided. Null until a decision is made.</summary>
     public Guid? ReviewedByUserId { get; private set; }
 
@@ -117,6 +132,28 @@ public sealed class VerificationCase : Entity
         ProviderReference = Trim(providerReference, 255);
         Version++;
         _ = utcNow;
+    }
+
+    /// <summary>
+    /// Notes what the provider has reported. Changes nothing about the case's status: a
+    /// clear result still waits for a staff member to approve it.
+    ///
+    /// Returns false, and records nothing, once the case has been decided. A late message
+    /// from the provider must not rewrite the evidence a decision was made on.
+    /// </summary>
+    public bool RecordProviderUpdate(string? status, string? score, DateTime utcNow)
+    {
+        if (IsDecided)
+        {
+            return false;
+        }
+
+        ProviderStatus = Trim(status, 64);
+        ProviderScore = Trim(score, 32);
+        ProviderUpdatedAtUtc = utcNow;
+        Version++;
+
+        return true;
     }
 
     /// <summary>Staff decision only. The caregiver has no path to this.</summary>

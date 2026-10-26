@@ -19,4 +19,14 @@ public sealed class RateLimitOptions
 
     [Range(1, 3600)]
     public int WebhookWindowSeconds { get; set; } = 60;
+
+    /// <summary>
+    /// Messages one IP may send through the public contact form per window. Low on purpose:
+    /// a person writes to a company once or twice, and the form accepts anonymous input.
+    /// </summary>
+    [Range(1, 100_000)]
+    public int FormPermitLimit { get; set; } = 10;
+
+    [Range(1, 86_400)]
+    public int FormWindowSeconds { get; set; } = 3600;
 }

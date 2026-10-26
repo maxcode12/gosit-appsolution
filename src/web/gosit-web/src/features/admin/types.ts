@@ -23,6 +23,9 @@ export interface PendingVerification {
   checkType: VerificationCheckType;
   status: string;
   submittedAtUtc: string;
+  /** What the screening provider reports, if one is running this check. Evidence only. */
+  providerStatus?: string | null;
+  providerScore?: string | null;
 }
 
 export interface PendingCertification {
@@ -268,4 +271,17 @@ export interface ReportedReview {
   reportReason: string | null;
   reportedAtUtc: string;
   createdAtUtc: string;
+}
+
+/** A message from the public contact form. Personal information: staff only. */
+export interface AdminEnquiry {
+  enquiryId: string;
+  name: string;
+  email: string;
+  kind: string;
+  message: string;
+  source: string;
+  status: string;
+  createdAtUtc: string;
+  handledAtUtc: string | null;
 }

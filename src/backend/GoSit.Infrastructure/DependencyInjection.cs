@@ -7,13 +7,16 @@ using GoSit.Infrastructure.Messaging;
 using GoSit.Infrastructure.Payments;
 using GoSit.Infrastructure.Persistence;
 using GoSit.Infrastructure.Persistence.Repositories;
+using GoSit.Infrastructure.Registration;
 using GoSit.Infrastructure.Scheduling;
+using GoSit.Infrastructure.Screening;
 using GoSit.Infrastructure.Security;
 using GoSit.Infrastructure.Time;
 using GoSit.Infrastructure.Video;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace GoSit.Infrastructure;
@@ -45,6 +48,9 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IVerificationRepository, VerificationRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
+        services.AddScoped<IEnquiryRepository, EnquiryRepository>();
+        services.Configure<EnquiryOptions>(configuration.GetSection(EnquiryOptions.SectionName));
+        services.AddScoped<IEnquiryAlert, EmailEnquiryAlert>();
         services.AddScoped<IAdminLookupRepository, AdminLookupRepository>();
         services.AddScoped<ICertificationReviewRepository, CertificationReviewRepository>();
         services.AddScoped<IDisputeRepository, DisputeRepository>();
@@ -53,8 +59,14 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<IGrowthRepository, GrowthRepository>();
         services.AddScoped<IInterviewRepository, InterviewRepository>();
-        // No vendor selected yet; cases wait for a staff decision.
-        services.AddScoped<IBackgroundCheckProvider, UnconfiguredBackgroundCheckProvider>();
+        // Certn when its key is configured, otherwise every case waits for a staff decision.
+        services.Configure<CertnOptions>(configuration.GetSection(CertnOptions.SectionName));
+        services.AddScoped<UnconfiguredBackgroundCheckProvider>();
+        services.AddHttpClient<CertnBackgroundCheckProvider>(CertnHttpClientRegistration.Configure);
+        services.AddScoped<IBackgroundCheckProvider>(sp =>
+            sp.GetRequiredService<IOptions<CertnOptions>>().Value.IsConfigured
+                ? sp.GetRequiredService<CertnBackgroundCheckProvider>()
+                : sp.GetRequiredService<UnconfiguredBackgroundCheckProvider>());
 
         // Registered as itself as well, so a test can drive one deterministic sweep.
         services.AddSingleton<ReviewPublicationSweeper>();
@@ -91,6 +103,10 @@ public static class DependencyInjection
         services.Configure<AdministratorSeedOptions>(
             configuration.GetSection(AdministratorSeedOptions.SectionName));
         services.AddScoped<AdministratorSeeder>();
+
+        services.Configure<RegistrationOptions>(
+            configuration.GetSection(RegistrationOptions.SectionName));
+        services.AddSingleton<IRegistrationPolicy, ConfiguredRegistrationPolicy>();
 
         // The outbox drains to a logger until an Azure Service Bus namespace exists.
         services.AddScoped<IIntegrationEventPublisher, LoggingIntegrationEventPublisher>();

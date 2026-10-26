@@ -10,12 +10,22 @@ public sealed class RegisterHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     ITokenService tokenService,
+    IRegistrationPolicy registrationPolicy,
     IDateTimeProvider clock,
     ILogger<RegisterHandler> logger) : ICommandHandler<RegisterCommand, RegisterResponse>
 {
     public async Task<RegisterResponse> HandleAsync(RegisterCommand command, CancellationToken cancellationToken)
     {
         var normalizedEmail = User.Normalize(command.Email);
+
+        // Before the duplicate check, so a closed door answers the same way for everyone
+        // and cannot be used to learn which addresses already hold an account.
+        if (!registrationPolicy.MayRegister(normalizedEmail))
+        {
+            logger.LogInformation("Sign-up refused: registration is closed to this address.");
+            throw new ForbiddenException(
+                "Sign-up is not open yet. Contact us and we will let you know when it is.");
+        }
 
         if (await users.EmailExistsAsync(normalizedEmail, cancellationToken))
         {
