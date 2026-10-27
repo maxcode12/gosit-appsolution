@@ -17,6 +17,11 @@
     <PackageReference Include="Stripe.net" Version="52.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Free Canadian postal-area data (GeoNames, CC BY 4.0) used for distance search. -->
+    <EmbeddedResource Include="Geocoding\Data\ca-postal-areas.tsv" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

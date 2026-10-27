@@ -29,4 +29,15 @@ public sealed class RateLimitOptions
 
     [Range(1, 86_400)]
     public int FormWindowSeconds { get; set; } = 3600;
+
+    /// <summary>
+    /// Lookups one IP may make against the public "caregivers near you" endpoints per
+    /// window. Generous, because typing in a search box fires several requests, but bounded
+    /// so the endpoint cannot be used to scrape or to flood the database.
+    /// </summary>
+    [Range(1, 100_000)]
+    public int LookupPermitLimit { get; set; } = 120;
+
+    [Range(1, 3600)]
+    public int LookupWindowSeconds { get; set; } = 60;
 }

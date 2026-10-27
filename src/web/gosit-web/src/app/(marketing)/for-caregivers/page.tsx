@@ -13,6 +13,7 @@ import {
 import { Faq } from "@/features/marketing/components/faq";
 import { CAREGIVER_FAQ } from "@/features/marketing/components/faq-data";
 import { FinalCta } from "@/features/marketing/components/final-cta";
+import { NearbySearch } from "@/features/marketing/components/nearby-search";
 import { Container, PageHero, SectionHeading } from "@/features/marketing/components/section";
 import { getStartedHref } from "@/features/marketing/public-mode";
 
@@ -77,6 +78,17 @@ export default function ForCaregiversPage() {
           How joining works
         </Link>
       </PageHero>
+
+      <section className="pt-14 sm:pt-20">
+        <Container className="grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <SectionHeading
+            eyebrow="Your area"
+            title="See who is already working near you."
+            body="Enter a postal code or city to see how many caregivers are on GoSit around you."
+          />
+          <NearbySearch audience="caregiver" />
+        </Container>
+      </section>
 
       <section className="py-16 sm:py-24">
         <Container className="grid items-center gap-16 lg:grid-cols-2">

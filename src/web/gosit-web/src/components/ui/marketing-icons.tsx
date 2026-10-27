@@ -131,3 +131,10 @@ export const UsersIcon = ({ className }: P) => (
     <path d="M3.5 19c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7M16 6.3a3 3 0 0 1 0 5.4M17.5 14.6c1.8.5 3 2 3.5 4.4" />
   </Icon>
 );
+
+export const PinIcon = ({ className }: P) => (
+  <Icon className={className}>
+    <path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z" />
+    <circle cx="12" cy="10.5" r="2.3" />
+  </Icon>
+);

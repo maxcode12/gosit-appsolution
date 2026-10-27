@@ -50,7 +50,7 @@ export function SearchFilters({
     router.push(next.size > 0 ? `/dashboard?${next}` : "/dashboard");
   }
 
-  const activeCount = ["serviceCode", "city", "postalCode", "maxHourlyRate", "minYearsOfExperience", "minRating"]
+  const activeCount = ["serviceCode", "city", "postalCode", "radiusKm", "maxHourlyRate", "minYearsOfExperience", "minRating"]
     .filter((key) => params.get(key))
     .length;
 
@@ -115,6 +115,21 @@ export function SearchFilters({
           defaultValue={params.get("postalCode") ?? ""}
           className="h-11 rounded-control border-border px-3 text-sm"
         />
+
+        <label className="flex flex-col gap-1">
+          <span className="font-control text-sm text-text-secondary">Distance from that postal code</span>
+          <select
+            name="radiusKm"
+            defaultValue={params.get("radiusKm") ?? ""}
+            className="h-11 rounded-control border border-border bg-surface px-3 font-control text-sm text-text-primary"
+          >
+            <option value="">Any distance</option>
+            <option value="5">Within 5 km</option>
+            <option value="10">Within 10 km</option>
+            <option value="25">Within 25 km</option>
+            <option value="50">Within 50 km</option>
+          </select>
+        </label>
 
         <TextInput
           label="Maximum hourly rate"

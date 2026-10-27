@@ -87,6 +87,17 @@ try
                     Window = TimeSpan.FromSeconds(rateLimits.FormWindowSeconds),
                     QueueLimit = 0,
                 }));
+
+        // The public "caregivers near you" lookups.
+        options.AddPolicy(RateLimitPolicies.PublicLookup, context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = rateLimits.LookupPermitLimit,
+                    Window = TimeSpan.FromSeconds(rateLimits.LookupWindowSeconds),
+                    QueueLimit = 0,
+                }));
     });
 
     // Cross-site permission is granted to named websites and to one policy only. The web
@@ -95,16 +106,28 @@ try
     var formOrigins = (builder.Configuration["Cors:PublicFormOrigins"] ?? string.Empty)
         .Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-    builder.Services.AddCors(options => options.AddPolicy(CorsPolicies.PublicForms, policy =>
+    builder.Services.AddCors(options =>
     {
-        if (formOrigins.Length > 0)
+        options.AddPolicy(CorsPolicies.PublicForms, policy =>
         {
-            policy.WithOrigins(formOrigins)
-                .WithMethods("POST")
-                .WithHeaders("Content-Type")
-                .SetPreflightMaxAge(TimeSpan.FromHours(1));
-        }
-    }));
+            if (formOrigins.Length > 0)
+            {
+                policy.WithOrigins(formOrigins)
+                    .WithMethods("POST")
+                    .WithHeaders("Content-Type")
+                    .SetPreflightMaxAge(TimeSpan.FromHours(1));
+            }
+        });
+
+        // Read-only lookups for the same website: GET only, no credentials, no custom headers.
+        options.AddPolicy(CorsPolicies.PublicReads, policy =>
+        {
+            if (formOrigins.Length > 0)
+            {
+                policy.WithOrigins(formOrigins).WithMethods("GET");
+            }
+        });
+    });
 
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -231,12 +254,18 @@ public static class RateLimitPolicies
 
     /// <summary>Guards the public contact form.</summary>
     public const string PublicForm = "public-form";
+
+    /// <summary>Guards the public postal-area lookups.</summary>
+    public const string PublicLookup = "public-lookup";
 }
 
 public static class CorsPolicies
 {
     /// <summary>The public website's contact form. See Cors:PublicFormOrigins.</summary>
     public const string PublicForms = "public-forms";
+
+    /// <summary>The same website's read-only lookups. See Cors:PublicFormOrigins.</summary>
+    public const string PublicReads = "public-reads";
 }
 
 // Exposed for WebApplicationFactory-based integration tests.

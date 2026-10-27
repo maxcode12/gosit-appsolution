@@ -7,9 +7,29 @@ namespace GoSit.Domain.Common.ValueObjects;
 /// provider is wired up (see IGeocodingService), most stored addresses have no
 /// coordinates and search falls back to matching on city.
 /// </summary>
+/// <summary>A point on the map, such as the centre of the postal area someone searched for.</summary>
+public readonly record struct GeoPoint(double Latitude, double Longitude)
+{
+    /// <summary>The address's coordinates, or null while it has none.</summary>
+    public static GeoPoint? From(Address? address) =>
+        address?.Latitude is { } latitude && address.Longitude is { } longitude
+            ? new GeoPoint(latitude, longitude)
+            : null;
+}
+
 public static class GeoDistance
 {
     private const double EarthRadiusKm = 6371.0088;
+
+    public static double? BetweenKm(GeoPoint? from, GeoPoint? to)
+    {
+        if (from is not { } origin || to is not { } destination)
+        {
+            return null;
+        }
+
+        return HaversineKm(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude);
+    }
 
     public static double? BetweenKm(Address? from, Address? to)
     {

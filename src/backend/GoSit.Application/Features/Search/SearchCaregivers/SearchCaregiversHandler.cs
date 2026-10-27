@@ -11,6 +11,7 @@ namespace GoSit.Application.Features.Search.SearchCaregivers;
 
 public sealed class SearchCaregiversHandler(
     ICaregiverSearchRepository search,
+    IPostalAreaDirectory postalAreas,
     ICareRequesterProfileRepository requesterProfiles,
     ICaregiverExposureRepository exposure,
     EntitlementService entitlements,
@@ -46,15 +47,21 @@ public sealed class SearchCaregiversHandler(
         // typed, and tells us which caregivers they have already saved.
         var requesterProfile = await requesterProfiles.FindByUserIdAsync(userId, cancellationToken);
 
-        // Distance is measured from the requester's saved address. A typed postal code
-        // narrows results by forward sortation area instead, because an address only
-        // gains coordinates once a geocoding provider is configured.
-        var origin = requesterProfile?.Address;
+        // Distance is measured from the postal code the reader typed when it is one we
+        // recognise, and otherwise from their saved address. Typing a place is how someone
+        // asks "who is near here", which may not be where they live.
+        var typedArea = postalAreas.Find(query.PostalCode);
+        var origin = typedArea is not null
+            ? new GeoPoint(typedArea.Latitude, typedArea.Longitude)
+            : Locate(requesterProfile?.Address);
 
         var filter = new CaregiverSearchFilter(
             service?.Id,
             NormalizeCity(query.City),
-            ToPostalCodePrefix(query.PostalCode),
+            // With a radius the distance does the narrowing. Matching the first three
+            // characters as well would hide caregivers in the next postal area over, who
+            // may be a few streets away.
+            typedArea is not null && query.RadiusKm.HasValue ? null : ToPostalCodePrefix(query.PostalCode),
             query.MaxHourlyRate,
             query.MinYearsOfExperience,
             query.MinRating,
@@ -73,7 +80,7 @@ public sealed class SearchCaregiversHandler(
         var eligible = candidates
             .Where(c => service is null || c.IsEligibleFor(service, today))
             .Where(c => MeetsRequestedCertifications(c, query.RequiredCertificationCodes, today))
-            .Where(c => WithinRadius(c, origin, query.RadiusKm))
+            .Where(c => WithinRadius(Locate(c.Address), origin, query.RadiusKm))
             .ToList();
 
         // Resolved for the whole eligible set in one query, because ranking needs the
@@ -87,7 +94,7 @@ public sealed class SearchCaregiversHandler(
             .Apply(eligible.Select(c => new RankedCaregiver(
                 c,
                 MatchesAvailability: MatchesRequestedWindow(c, query),
-                DistanceKm: CaregiverRanking.DistanceFrom(origin, c),
+                DistanceKm: CaregiverRanking.DistanceFrom(origin, Locate(c.Address)),
                 IsPromoted: promoted.Contains(c.UserId))))
             .ToList();
 
@@ -112,7 +119,7 @@ public sealed class SearchCaregiversHandler(
 
         // Distance ranking is only meaningful once addresses are geocoded, and which
         // side is missing decides what there is to say about it.
-        var reason = DistanceUnavailableReasonFor(origin, ranked);
+        var reason = DistanceUnavailableReasonFor(typedArea is not null, requesterProfile?.Address, origin, ranked);
 
         return new CaregiverSearchResponse(
             results, ranked.Count, query.Page, query.PageSize, reason is not null, reason);
@@ -191,17 +198,23 @@ public sealed class SearchCaregiversHandler(
     /// file to go and add one sends them looking for a setting they already filled in.
     /// </summary>
     private static string? DistanceUnavailableReasonFor(
-        Address? origin,
+        bool searchedByPlace,
+        Address? savedAddress,
+        GeoPoint? origin,
         IReadOnlyList<RankedCaregiver> ranked)
     {
-        if (origin is null)
+        // A typed place is an origin in itself; the saved address only matters without one.
+        if (!searchedByPlace)
         {
-            return DistanceUnavailableReasons.NoAddress;
-        }
+            if (savedAddress is null)
+            {
+                return DistanceUnavailableReasons.NoAddress;
+            }
 
-        if (origin.Latitude is null)
-        {
-            return DistanceUnavailableReasons.AddressNotLocated;
+            if (origin is null)
+            {
+                return DistanceUnavailableReasons.AddressNotLocated;
+            }
         }
 
         // Nobody to measure against is not the same as nothing to measure from. With no
@@ -261,18 +274,39 @@ public sealed class SearchCaregiversHandler(
     }
 
     /// <summary>
+    /// Where an address is, as precisely as we honestly know.
+    ///
+    /// A street-level coordinate on the address wins when there is one. Without it, the
+    /// centre of the address's postal area stands in, worked out here and never stored, so
+    /// distance search works for every Canadian address without a paid geocoder and without
+    /// putting a neighbourhood's centre point on a record that arrival check-in reads as a
+    /// house.
+    /// </summary>
+    private GeoPoint? Locate(Address? address)
+    {
+        if (GeoPoint.From(address) is { } exact)
+        {
+            return exact;
+        }
+
+        return postalAreas.Find(address?.PostalCode) is { } area
+            ? new GeoPoint(area.Latitude, area.Longitude)
+            : null;
+    }
+
+    /// <summary>
     /// Applies the radius filter only where both ends are geocoded. Excluding
     /// caregivers whose distance is unknown would empty the results entirely while no
     /// geocoding provider is configured.
     /// </summary>
-    private static bool WithinRadius(CaregiverProfile caregiver, Address? origin, int? radiusKm)
+    private static bool WithinRadius(GeoPoint? caregiver, GeoPoint? origin, int? radiusKm)
     {
         if (radiusKm is not { } radius || origin is null)
         {
             return true;
         }
 
-        var distance = GeoDistance.BetweenKm(origin, caregiver.Address);
+        var distance = GeoDistance.BetweenKm(origin, caregiver);
         return distance is null || distance <= radius;
     }
 

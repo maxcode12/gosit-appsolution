@@ -1246,3 +1246,26 @@ string in `appsettings.Development.json`.
 
 **Integration tests pass without running anything** — the Postgres Testcontainers test no-ops
 when Docker is unavailable. Start Docker Desktop to exercise it for real.
+
+## Postal-area search ("caregivers near you")
+
+Distance search and the website's "how many caregivers are near me" box run on free data held
+inside the application. Nothing here calls a paid mapping service.
+
+- **Data:** the GeoNames postal-code dataset for Canada, about 1,650 forward sortation areas
+  (the first three characters of a postal code, like `M5V`), each with a name and a centre
+  point. It lives in `src/backend/GoSit.Infrastructure/Geocoding/Data/ca-postal-areas.tsv` and is
+  embedded in the build. It is published under **Creative Commons Attribution 4.0**, so the
+  website footer credits GeoNames; keep that credit.
+- **Refreshing it:** download `CA.zip` from https://download.geonames.org/export/zip/, then write
+  columns 2 (code), 3 (name), 5 (province), 10 (latitude) and 11 (longitude) of `CA.txt`, tab
+  separated, over the file above.
+- **Precision:** neighbourhood level, by design. Locations are worked out when a search runs and
+  are **never stored on an address**. A stored coordinate is read as "this is the house", and
+  arrival check-in compares a caregiver's phone against it, so a neighbourhood's centre saved
+  there would be wrong by kilometres. A street-level coordinate, when Azure Maps is configured,
+  still wins over the postal area.
+- **Public endpoints:** `GET /api/v1/areas/overview?query=M5V&radiusKm=25` and
+  `GET /api/v1/areas/suggest?q=toron`. Anonymous, rate limited per IP (`RateLimiting:Lookup*`),
+  readable from the company website only (`Cors:PublicFormOrigins`), and they return a count and a
+  place, never a caregiver.

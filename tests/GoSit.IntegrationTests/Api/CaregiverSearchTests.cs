@@ -321,15 +321,17 @@ public class CaregiverSearchTests(GoSitApiFactory factory)
     }
 
     /// <summary>
-    /// Without a geocoding provider most addresses have no coordinates. Search must
-    /// still work, and must say that distance ranking did not apply.
+    /// With nowhere to measure from, search must still work, and must say that distance
+    /// ranking did not apply.
     /// </summary>
     [Fact]
     public async Task Search_reports_when_distance_ranking_is_unavailable()
     {
         await factory.CreateListableCaregiverAsync(
             serviceCodes: ["BABYSITTING"], certificationCodes: ["VULNERABLE_SECTOR"]);
-        var client = await RequesterAsync();
+
+        // Registered but with no profile, so no address to measure from.
+        var client = await factory.RegisterCareRequesterAsync();
 
         var results = await SearchAsync(client);
 
@@ -353,9 +355,10 @@ public class CaregiverSearchTests(GoSitApiFactory factory)
         await factory.CreateListableCaregiverAsync(
             city: city, serviceCodes: ["BABYSITTING"], certificationCodes: ["VULNERABLE_SECTOR"]);
 
-        // A profile with an address, which CreateCareRequesterProfileAsync saves — and
-        // no coordinates, because no geocoding provider is configured in tests.
-        var client = await RequesterAsync();
+        // A profile with an address that is not a Canadian postal area we know ("Z" is not
+        // a first letter any postal code uses), so there is nowhere to measure from.
+        var client = await factory.RegisterCareRequesterAsync();
+        await client.CreateCareRequesterProfileAsync(postalCode: "Z9Z 9Z9");
 
         var results = await SearchAsync(client, $"?city={city}");
 
@@ -389,8 +392,10 @@ public class CaregiverSearchTests(GoSitApiFactory factory)
     {
         var city = $"Nocaregivers{Guid.NewGuid():N}"[..20];
 
+        // Caregivers at a postal code no area matches: placed nowhere, and not geocoded.
         await factory.CreateListableCaregiverAsync(
-            city: city, serviceCodes: ["BABYSITTING"], certificationCodes: ["VULNERABLE_SECTOR"]);
+            city: city, postalCode: "Z9Z 9Z9", serviceCodes: ["BABYSITTING"],
+            certificationCodes: ["VULNERABLE_SECTOR"]);
 
         var client = await RequesterAsync();
         await factory.SetRequesterCoordinatesAsync(client, 43.6534, -79.3841);

@@ -75,7 +75,18 @@ export function SiteFooter() {
             diagnosis. If you need regulated health care, speak to a licensed provider. Screening
             reduces risk; it is not a guarantee.
           </p>
-          <p className="mt-4 text-sm text-text-muted">
+          <p className="mt-4 text-xs text-text-muted">
+            Postal-area locations from{" "}
+            <a href="https://www.geonames.org/" className="underline hover:text-text-secondary" rel="noopener">
+              GeoNames
+            </a>
+            , licensed under{" "}
+            <a href="https://creativecommons.org/licenses/by/4.0/" className="underline hover:text-text-secondary" rel="noopener">
+              CC BY 4.0
+            </a>
+            .
+          </p>
+          <p className="mt-3 text-sm text-text-muted">
             © {new Date().getFullYear()} 11419056 Canada Inc., operating as GoSit. Made in Ontario.
           </p>
         </div>

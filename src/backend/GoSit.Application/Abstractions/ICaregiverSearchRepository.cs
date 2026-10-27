@@ -30,6 +30,16 @@ public interface ICaregiverSearchRepository
         int limit,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Listable caregivers whose postal area is one of those given, for counting.
+    ///
+    /// Returns only the area and category codes, never a profile: the public "caregivers
+    /// near you" count must not be one projection away from exposing a person.
+    /// </summary>
+    Task<IReadOnlyList<NearbyCaregiver>> ListListableInAreasAsync(
+        IReadOnlyCollection<string> areaCodes,
+        CancellationToken cancellationToken);
+
     /// <summary>A single caregiver for the public detail page, or null if not listable.</summary>
     Task<CaregiverProfile?> FindListableByIdAsync(Guid caregiverProfileId, CancellationToken cancellationToken);
 
@@ -49,6 +59,9 @@ public interface ICaregiverSearchRepository
         IReadOnlyCollection<Guid> userIds,
         CancellationToken cancellationToken);
 }
+
+/// <summary>A listable caregiver reduced to their postal area and the categories they serve.</summary>
+public sealed record NearbyCaregiver(string AreaCode, IReadOnlyList<string> CategoryCodes);
 
 /// <summary>
 /// A caregiver's name for display. Only ever rendered as first name plus last initial

@@ -63,7 +63,9 @@ public static class ProfileTestClient
     }
 
     /// <summary>Creates the minimum care-requester profile the recipient endpoints need.</summary>
-    public static async Task CreateCareRequesterProfileAsync(this HttpClient client)
+    public static async Task CreateCareRequesterProfileAsync(
+        this HttpClient client,
+        string postalCode = "M5S 1M2")
     {
         var response = await client.PutAsJsonAsync("/api/v1/care-requesters/me", new
         {
@@ -75,7 +77,7 @@ public static class ProfileTestClient
                 line2 = (string?)null,
                 city = "Toronto",
                 province = "ON",
-                postalCode = "M5S 1M2",
+                postalCode,
                 country = "CA",
             },
         });

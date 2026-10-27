@@ -124,6 +124,7 @@ function toFilters(params: Record<string, string | string[] | undefined>): Careg
     serviceCode: single("serviceCode"),
     city: single("city"),
     postalCode: single("postalCode"),
+    radiusKm: number("radiusKm"),
     maxHourlyRate: number("maxHourlyRate"),
     minYearsOfExperience: number("minYearsOfExperience"),
     minRating: number("minRating"),

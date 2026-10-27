@@ -15,6 +15,7 @@ import { AppShowcase } from "@/features/marketing/components/app-showcase";
 import { Faq } from "@/features/marketing/components/faq";
 import { FAMILY_FAQ } from "@/features/marketing/components/faq-data";
 import { FinalCta } from "@/features/marketing/components/final-cta";
+import { NearbySearch } from "@/features/marketing/components/nearby-search";
 import { Container, Eyebrow, SectionHeading } from "@/features/marketing/components/section";
 import { getStartedHref } from "@/features/marketing/public-mode";
 
@@ -45,6 +46,7 @@ export default function HomePage() {
     <>
       <Hero />
       <TrustStrip />
+      <NearYou />
       <Audiences />
       <Services />
       <HowItWorks />
@@ -194,6 +196,22 @@ function TrustStrip() {
         {row(true)}
       </div>
     </div>
+  );
+}
+
+/** The one thing most visitors want to know first: is anyone near me? */
+function NearYou() {
+  return (
+    <section className="pt-16 sm:pt-24">
+      <Container className="grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+        <SectionHeading
+          eyebrow="Near you"
+          title="See how many caregivers are in your area."
+          body="Type a postal code or a city. We will tell you how many checked caregivers are close by, before you sign up for anything."
+        />
+        <NearbySearch audience="family" />
+      </Container>
+    </section>
   );
 }
 

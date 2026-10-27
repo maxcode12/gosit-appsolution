@@ -14,6 +14,7 @@ import {
 import { Faq } from "@/features/marketing/components/faq";
 import { FAMILY_FAQ } from "@/features/marketing/components/faq-data";
 import { FinalCta } from "@/features/marketing/components/final-cta";
+import { NearbySearch } from "@/features/marketing/components/nearby-search";
 import { Container, PageHero, SectionHeading } from "@/features/marketing/components/section";
 import { getStartedHref } from "@/features/marketing/public-mode";
 
@@ -87,6 +88,17 @@ export default function ForFamiliesPage() {
           How it works
         </Link>
       </PageHero>
+
+      <section className="pt-14 sm:pt-20">
+        <Container className="grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <SectionHeading
+            eyebrow="Near you"
+            title="Is there someone close to home?"
+            body="Enter your postal code or city to see how many caregivers are nearby."
+          />
+          <NearbySearch audience="family" />
+        </Container>
+      </section>
 
       <section className="py-16 sm:py-24">
         <Container>

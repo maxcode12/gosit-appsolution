@@ -78,7 +78,9 @@ async function startSession(
     return home;
   }
 
-  return `${home}?postalCode=${encodeURIComponent(postalCode)}`;
+  // A radius with it, so the first search is "near what I typed", not "everyone sharing
+  // that postal area".
+  return `${home}?postalCode=${encodeURIComponent(postalCode)}&radiusKm=25`;
 }
 
 /**
@@ -90,7 +92,9 @@ async function startSession(
 function toPostalCode(value: FormDataEntryValue | null): string | undefined {
   const cleaned = String(value ?? "").trim().toUpperCase();
 
-  return /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/.test(cleaned) ? cleaned : undefined;
+  // Six characters, or just the first three: the website's "caregivers near you" box works
+  // at postal-area level, and someone who typed "M5V" there should arrive with it.
+  return /^[A-Z]\d[A-Z]( ?\d[A-Z]\d)?$/.test(cleaned) ? cleaned : undefined;
 }
 
 export async function loginAction(

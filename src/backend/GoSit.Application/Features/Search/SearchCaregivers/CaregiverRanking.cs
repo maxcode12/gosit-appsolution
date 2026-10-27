@@ -84,6 +84,6 @@ public static class CaregiverRanking
             // Guarantees a stable order across pages when everything above ties.
             .ThenBy(c => c.Profile.Id);
 
-    public static double? DistanceFrom(Address? origin, CaregiverProfile caregiver) =>
-        GeoDistance.BetweenKm(origin, caregiver.Address);
+    public static double? DistanceFrom(GeoPoint? origin, GeoPoint? caregiver) =>
+        GeoDistance.BetweenKm(origin, caregiver);
 }

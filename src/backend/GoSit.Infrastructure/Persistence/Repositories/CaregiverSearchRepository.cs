@@ -77,6 +77,34 @@ public sealed class CaregiverSearchRepository(GoSitDbContext context) : ICaregiv
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<NearbyCaregiver>> ListListableInAreasAsync(
+        IReadOnlyCollection<string> areaCodes,
+        CancellationToken cancellationToken)
+    {
+        if (areaCodes.Count == 0)
+        {
+            return [];
+        }
+
+        var codes = areaCodes.ToArray();
+
+        var rows = await ListableCaregivers
+            // The first three characters of the stored postal code are its forward sortation area.
+            .Where(p => codes.Contains(p.Address!.PostalCode.Substring(0, 3)))
+            .Select(p => new
+            {
+                Area = p.Address!.PostalCode.Substring(0, 3),
+                Categories = p.Services.Select(s => s.Category.Code).ToList(),
+            })
+            // A ceiling, not a page: a count over a hundred thousand rows is not a launch problem.
+            .Take(5000)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(r => new NearbyCaregiver(r.Area, r.Categories.Distinct().ToList()))
+            .ToList();
+    }
+
     public Task<CaregiverProfile?> FindListableByIdAsync(
         Guid caregiverProfileId,
         CancellationToken cancellationToken) =>
