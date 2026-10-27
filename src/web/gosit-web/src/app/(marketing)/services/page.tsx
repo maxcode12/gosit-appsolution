@@ -78,6 +78,11 @@ export default function ServicesPage() {
     <>
       <PageHero
         eyebrow="Care we cover"
+        image={{
+          src: "/images/family-support.jpg",
+          alt: "Three adults of different generations cooking a meal together in a kitchen.",
+          badge: { icon: <HomeIcon className="size-6" />, title: "Care at your home", body: "Where your family is comfortable" },
+        }}
         title={
           <>
             Many kinds of help, <em className="text-brand-primary">one place</em>.
@@ -91,7 +96,7 @@ export default function ServicesPage() {
         </Link>
       </PageHero>
 
-      <section className="py-20 sm:py-28">
+      <section className="py-14 sm:py-20">
         <Container className="flex flex-col gap-10">
           {CATEGORIES.map((category, index) => (
             <article
@@ -155,8 +160,8 @@ export default function ServicesPage() {
             </div>
             <div className="relative min-h-[18rem]">
               <Image
-                src="/images/pet-care.jpg"
-                alt="A person walking a golden retriever on a leash along a paved path."
+                src="/images/pet-cuddle.jpg"
+                alt="A woman smiling as she hugs a happy dog in a park."
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckIcon } from "@/components/ui/marketing-icons";
 import { ContactForm } from "@/features/marketing/components/contact-form";
+import Image from "next/image";
 import { Container, Eyebrow } from "@/features/marketing/components/section";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export default function ContactPage() {
   return (
     <section className="hero-wash relative overflow-hidden">
       <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
-      <Container className="relative grid gap-14 py-20 sm:py-28 lg:grid-cols-[0.9fr_1.1fr]">
+      <Container className="relative grid gap-14 py-14 sm:py-20 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <Eyebrow>Contact</Eyebrow>
           <h1 className="font-display mt-5 text-5xl leading-[1.04] text-text-primary sm:text-6xl">
@@ -35,7 +36,10 @@ export default function ContactPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-10 max-w-md text-sm leading-relaxed text-text-muted">
+          <div className="relative mt-10 hidden aspect-[16/9] max-w-md overflow-hidden rounded-3xl shadow-md ring-1 ring-border lg:block">
+            <Image src="/images/child-care.jpg" alt="A caregiver and a young girl building with coloured blocks at a table." fill sizes="28rem" className="object-cover" />
+          </div>
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-text-muted">
             In an emergency, call 911. This form is not monitored around the clock.
           </p>
         </div>

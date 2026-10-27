@@ -67,6 +67,11 @@ export default function ForFamiliesPage() {
     <>
       <PageHero
         eyebrow="For families"
+        image={{
+          src: "/images/home-drawing.jpg",
+          alt: "A mother and her young son drawing together at a coffee table.",
+          badge: { icon: <VideoCameraIcon className="size-6" />, title: "Meet on video first", body: "Recorded for safety, on GoSit" },
+        }}
         title={
           <>
             Help you can <em className="text-brand-primary">rely on</em>, found in minutes.
@@ -83,7 +88,7 @@ export default function ForFamiliesPage() {
         </Link>
       </PageHero>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container>
           <SectionHeading
             eyebrow="Why families choose GoSit"
@@ -103,7 +108,7 @@ export default function ForFamiliesPage() {
         </Container>
       </section>
 
-      <section className="border-y border-border bg-surface py-24 sm:py-32">
+      <section className="border-y border-border bg-surface py-16 sm:py-24">
         <Container>
           <SectionHeading
             eyebrow="Real life"
@@ -132,7 +137,7 @@ export default function ForFamiliesPage() {
         </Container>
       </section>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeading
             eyebrow="Questions families ask"

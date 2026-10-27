@@ -21,7 +21,7 @@ export function LoginForm() {
   const [state, formAction] = useActionState<AuthFormState, FormData>(loginAction, {});
 
   return (
-    <form action={formAction} className="flex flex-col gap-5" noValidate>
+    <form action={formAction} className="flex flex-col gap-4" noValidate>
       {state.error ? (
         <p
           role="alert"

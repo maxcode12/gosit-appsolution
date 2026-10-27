@@ -199,7 +199,7 @@ function TrustStrip() {
 
 function Audiences() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-24">
       <Container>
         <SectionHeading
           align="center"
@@ -207,7 +207,7 @@ function Audiences() {
           title="Whichever side you are on, it starts here."
         />
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-2">
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
           <article className="reveal group relative overflow-hidden rounded-[2rem] border border-border bg-surface shadow-md">
             <div className="relative aspect-[16/9] overflow-hidden">
               <Image
@@ -329,7 +329,7 @@ const SERVICES = [
 
 function Services() {
   return (
-    <section className="border-y border-border bg-surface py-24 sm:py-32">
+    <section className="border-y border-border bg-surface py-16 sm:py-24">
       <Container>
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
           <SectionHeading
@@ -413,7 +413,7 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-24">
       <Container>
         <SectionHeading
           align="center"
@@ -422,7 +422,7 @@ function HowItWorks() {
           body="No subscription to browse, no fee to message, and no charge until your caregiver says yes."
         />
 
-        <ol className="relative mt-20 grid gap-12 md:grid-cols-3 md:gap-8">
+        <ol className="relative mt-14 grid gap-12 md:grid-cols-3 md:gap-8">
           <div
             aria-hidden
             className="absolute left-[16%] right-[16%] top-7 hidden border-t-2 border-dashed border-border-strong md:block"
@@ -478,7 +478,7 @@ function Safety() {
     <section className="px-3 sm:px-5">
       <div className="deep-wash relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]">
         <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-15" />
-        <div className="relative grid gap-14 px-6 py-20 sm:px-14 sm:py-28 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="relative grid gap-14 px-6 py-14 sm:px-14 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="reveal">
             <Eyebrow light>Trust and safety</Eyebrow>
             <h2 className="font-display mt-5 text-4xl leading-[1.06] text-text-on-deep sm:text-6xl">
@@ -516,7 +516,7 @@ function Safety() {
 
 function AppSection() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-24">
       <Container className="grid items-center gap-16 lg:grid-cols-2">
         <div className="reveal">
           <Eyebrow>The GoSit app</Eyebrow>
@@ -574,7 +574,7 @@ function AppSection() {
 
 function FaqSection() {
   return (
-    <section className="border-t border-border bg-surface py-24 sm:py-32">
+    <section className="border-t border-border bg-surface py-16 sm:py-24">
       <Container className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <SectionHeading

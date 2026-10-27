@@ -52,3 +52,16 @@ Unsplash licence covers the photograph, not the likeness — so these must stay
 illustrative. Do not caption one as a named caregiver, place one beside a
 testimonial, or use one anywhere it would read as a real person endorsing the
 product. That is a publicity-rights problem the licence does not solve.
+
+## Added 2026-10-27 (all free Unsplash License; none are Unsplash+ or Getty-supplied)
+
+- **home-drawing.jpg** — Vitaly Gariev ([@silverkblack](https://unsplash.com/@silverkblack)) — https://unsplash.com/photos/inrYL3ffAsQ — mother and son drawing at a table
+- **reading-together.jpg** — Vitaly Gariev ([@silverkblack](https://unsplash.com/@silverkblack)) — https://unsplash.com/photos/xKRrjOORL6E — mother and daughter reading a book in bed
+- **caregiver-companionship.jpg** — Age Cymru ([@agecymru](https://unsplash.com/@agecymru)) — https://unsplash.com/photos/bSXk1lOp8T0 — caregiver assisting an elderly couple with colouring
+- **senior-activity.jpg** — Age Cymru ([@agecymru](https://unsplash.com/@agecymru)) — https://unsplash.com/photos/GStFfDrOygo — caregiver assists two elderly women knitting
+- **pet-cuddle.jpg** — Wade Austin Ellis ([@wadeaustinellis](https://unsplash.com/@wadeaustinellis)) — https://unsplash.com/photos/FtuJIuBbUhI — woman hugging a dog
+- **toddler-play.jpg** — [@amonwatdumkrut](https://unsplash.com/@amonwatdumkrut) — https://unsplash.com/photos/sQcFcFImSg8 — teacher shows colourful blocks to young children
+
+The same rule as above applies: the people are not GoSit caregivers and must not be captioned
+as such. The Age Cymru photographs were taken in a care setting, so they are used for
+companionship and activity, never to suggest a clinical service.

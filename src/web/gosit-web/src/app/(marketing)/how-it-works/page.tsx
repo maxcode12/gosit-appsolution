@@ -32,6 +32,12 @@ export default function HowItWorksPage() {
     <>
       <PageHero
         eyebrow="How it works"
+        image={{
+          src: "/images/hero.jpg",
+          alt: "A caregiver and a young child reading a book together, both laughing.",
+          position: "object-[70%_center]",
+          badge: { icon: <ClockIcon className="size-6" />, title: "Checked in", body: "Billed for time actually worked" },
+        }}
         title={
           <>
             Simple for families. <em className="text-brand-primary">Fair</em> for caregivers.
@@ -40,7 +46,7 @@ export default function HowItWorksPage() {
         body="From first message to final payment, here is what happens, and who is responsible for what."
       />
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container>
           <Eyebrow>For families</Eyebrow>
           <h2 className="font-display mt-4 max-w-2xl text-4xl text-text-primary sm:text-5xl">
@@ -61,7 +67,7 @@ export default function HowItWorksPage() {
         </Container>
       </section>
 
-      <section className="border-y border-border bg-surface py-24 sm:py-32">
+      <section className="border-y border-border bg-surface py-16 sm:py-24">
         <Container className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <Eyebrow>For caregivers</Eyebrow>
@@ -85,7 +91,7 @@ export default function HowItWorksPage() {
         </Container>
       </section>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container className="grid items-center gap-12 lg:grid-cols-2">
           <div className="reveal">
             <Eyebrow>Meeting first</Eyebrow>

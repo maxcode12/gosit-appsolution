@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Faq } from "@/features/marketing/components/faq";
 import { CAREGIVER_FAQ, FAMILY_FAQ } from "@/features/marketing/components/faq-data";
 import { FinalCta } from "@/features/marketing/components/final-cta";
-import { Container, Eyebrow, PageHero } from "@/features/marketing/components/section";
+import { Container, Eyebrow, PageBanner } from "@/features/marketing/components/section";
+import { WhatWeDo } from "@/features/marketing/components/what-we-do";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -30,18 +31,23 @@ export default function FaqPage() {
         }}
       />
 
-      <PageHero
+      <PageBanner
         eyebrow="FAQ"
         title={
           <>
-            Questions, <em className="text-brand-primary">answered</em>.
+            Questions, <em className="text-accent-on-deep">answered</em>.
           </>
         }
-        body="Including the awkward ones about what GoSit does not do."
+        body="GoSit connects families with independent caregivers for children, seniors, adults who need support, and pets. Here is how it works, including what we do not do."
+        image="/images/caregiver-companionship.jpg"
+        alt="A caregiver leaning in to help an older woman with a drawing, beside an older man at the same table."
+        chips={["Children", "Seniors", "Adults who need support", "Pets"]}
       />
 
-      <section className="py-24 sm:py-32">
-        <Container className="grid gap-20 lg:grid-cols-2">
+      <WhatWeDo />
+
+      <section className="py-16 sm:py-24">
+        <Container className="grid gap-14 lg:grid-cols-2">
           <div>
             <Eyebrow>For families</Eyebrow>
             <div className="mt-6">

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { CheckIcon } from "@/components/ui/marketing-icons";
 import { EarlyAccessForm } from "@/features/marketing/components/early-access-form";
+import Image from "next/image";
 import { Container, Eyebrow } from "@/features/marketing/components/section";
 import { MARKETING_ONLY } from "@/features/marketing/public-mode";
 
@@ -25,7 +26,7 @@ export default function GetStartedPage() {
   return (
     <section className="hero-wash relative overflow-hidden">
       <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
-      <Container className="relative grid gap-14 py-20 sm:py-28 lg:grid-cols-[0.9fr_1.1fr]">
+      <Container className="relative grid gap-14 py-14 sm:py-20 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <Eyebrow>Early access</Eyebrow>
           <h1 className="font-display mt-5 text-5xl leading-[1.04] text-text-primary sm:text-6xl">
@@ -49,6 +50,9 @@ export default function GetStartedPage() {
               </li>
             ))}
           </ul>
+          <div className="relative mt-10 hidden aspect-[16/9] max-w-md overflow-hidden rounded-3xl shadow-md ring-1 ring-border lg:block">
+            <Image src="/images/senior-care.jpg" alt="A caregiver holding an older woman's hands, helping her up from a chair." fill sizes="28rem" className="object-cover" />
+          </div>
         </div>
 
         <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-lg sm:p-10">

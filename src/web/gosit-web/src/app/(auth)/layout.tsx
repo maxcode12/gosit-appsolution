@@ -50,7 +50,18 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className="absolute -bottom-40 -left-40 size-[30rem] rounded-full bg-accent-soft blur-3xl" />
         </div>
 
-        {children}
+        <div className="flex w-full flex-col items-center">
+          {/* On a phone the brand panel is hidden, so a slim photograph stands in for it. */}
+          <div className="relative mb-5 h-32 w-full max-w-md overflow-hidden rounded-3xl shadow-md lg:hidden">
+            <Image src="/images/hero.jpg" alt="" fill sizes="28rem" className="object-cover object-[70%_center]" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[rgba(12,20,22,0.85)] to-[rgba(12,20,22,0.15)]" />
+            <p className="font-display absolute inset-x-5 bottom-4 text-xl leading-tight text-white">
+              Trusted care for every stage of family life.
+            </p>
+          </div>
+
+          {children}
+        </div>
       </div>
     </main>
   );

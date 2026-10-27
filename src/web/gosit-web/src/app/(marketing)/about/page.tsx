@@ -33,6 +33,10 @@ export default function AboutPage() {
     <>
       <PageHero
         eyebrow="About GoSit"
+        image={{
+          src: "/images/reading-together.jpg",
+          alt: "A woman with glasses reading a book with a young girl on a bed.",
+        }}
         title={
           <>
             Built for the people who <em className="text-brand-primary">do the caring</em>.
@@ -41,7 +45,7 @@ export default function AboutPage() {
         body="GoSit started with a simple frustration: finding someone you can trust to look after your family should not depend on who you happen to know."
       />
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container className="grid items-center gap-16 lg:grid-cols-2">
           <div className="reveal">
             <Eyebrow>Our story</Eyebrow>
@@ -72,7 +76,7 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      <section className="border-y border-border bg-surface py-24 sm:py-32">
+      <section className="border-y border-border bg-surface py-16 sm:py-24">
         <Container>
           <SectionHeading eyebrow="What we believe" title="Four things we hold to." />
           <ul className="mt-14 grid gap-5 md:grid-cols-2">

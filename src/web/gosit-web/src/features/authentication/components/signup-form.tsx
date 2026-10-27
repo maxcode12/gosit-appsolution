@@ -37,7 +37,7 @@ export function SignupForm({
   const [state, formAction] = useActionState<AuthFormState, FormData>(registerAction, {});
 
   return (
-    <form action={formAction} className="flex flex-col gap-5" noValidate>
+    <form action={formAction} className="flex flex-col gap-4" noValidate>
       {postalCode ? <input type="hidden" name="postalCode" value={postalCode} /> : null}
       {state.error ? (
         <p

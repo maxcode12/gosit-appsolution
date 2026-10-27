@@ -57,6 +57,11 @@ export default function ForCaregiversPage() {
     <>
       <PageHero
         eyebrow="For caregivers"
+        image={{
+          src: "/images/toddler-play.jpg",
+          alt: "A caregiver sitting on the floor showing colourful blocks to young children.",
+          badge: { icon: <WalletCardIcon className="size-6" />, title: "Paid for time worked", body: "Every fee in one statement" },
+        }}
         title={
           <>
             Work you are good at, <em className="text-brand-primary">on your terms</em>.
@@ -73,7 +78,7 @@ export default function ForCaregiversPage() {
         </Link>
       </PageHero>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container className="grid items-center gap-16 lg:grid-cols-2">
           <div className="reveal relative aspect-[5/4] overflow-hidden rounded-[2rem] shadow-lg ring-1 ring-border">
             <Image
@@ -105,7 +110,7 @@ export default function ForCaregiversPage() {
         </Container>
       </section>
 
-      <section id="how-to-join" className="scroll-mt-24 border-y border-border bg-surface py-24 sm:py-32">
+      <section id="how-to-join" className="scroll-mt-24 border-y border-border bg-surface py-16 sm:py-24">
         <Container>
           <SectionHeading
             align="center"
@@ -138,7 +143,7 @@ export default function ForCaregiversPage() {
         </Container>
       </section>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeading
             eyebrow="Questions caregivers ask"

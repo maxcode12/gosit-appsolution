@@ -71,6 +71,11 @@ export default function SafetyPage() {
     <>
       <PageHero
         eyebrow="Trust and safety"
+        image={{
+          src: "/images/specialised-support.jpg",
+          alt: "A companion walking with someone in a wheelchair across a field at sunset.",
+          badge: { icon: <IdCardIcon className="size-6" />, title: "Identity verified", body: "Before anyone is listed" },
+        }}
         title={
           <>
             What we check, and <em className="text-brand-primary">where we stop</em>.
@@ -79,7 +84,7 @@ export default function SafetyPage() {
         body="You are letting someone into your home to look after a person you love. Here is what stands behind that, stated plainly."
       />
 
-      <section className="py-24 sm:py-32">
+      <section className="py-16 sm:py-24">
         <Container>
           <SectionHeading eyebrow="Before anyone is listed" title="Six things that are true of every caregiver and every booking." />
           <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -96,10 +101,10 @@ export default function SafetyPage() {
         </Container>
       </section>
 
-      <section className="px-3 pb-24 sm:px-5 sm:pb-32">
+      <section className="px-3 pb-16 sm:px-5 sm:pb-24">
         <div className="deep-wash relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]">
           <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-15" />
-          <div className="relative grid gap-12 px-6 py-20 sm:px-14 sm:py-24 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="relative grid gap-12 px-6 py-14 sm:px-14 sm:py-20 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <Eyebrow light>The honest part</Eyebrow>
               <h2 className="font-display mt-4 text-4xl leading-[1.08] text-text-on-deep sm:text-5xl">
