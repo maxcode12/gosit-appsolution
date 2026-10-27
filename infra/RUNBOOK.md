@@ -60,11 +60,10 @@ Run it from the repository root. The upload tool refuses to run from inside the 
 
 ## Certn (background checks)
 
-Built from Certn's public API reference and **not yet run against Certn**: it needs a test key. Identity and criminal record checks are ordered through Certn; the vulnerable sector check is deliberately left to staff until Certn confirms it exists in their current API. Certn emails the caregiver directly. Its notifications go to `https://api.gosits.com/api/v1/webhooks/certn` (use the `azurewebsites.net` address until `api.gosits.com` is set up). Results appear beside the case in the admin verification queue as evidence; staff still approve or reject. First test: order one case in Certn's sandbox, watch the notification arrive, and compare the request shapes in `CertnBackgroundCheckProvider.cs` with what Certn accepts.
+Built from Certn's public API reference and **not yet run against Certn**: it needs a test key. Identity and criminal record checks are ordered through Certn; the vulnerable sector check is deliberately left to staff until Certn confirms it exists in their current API. Certn emails the caregiver directly. Its notifications go to `https://api.gosits.com/api/v1/webhooks/certn`. Results appear beside the case in the admin verification queue as evidence; staff still approve or reject. First test: order one case in Certn's sandbox, watch the notification arrive, and compare the request shapes in `CertnBackgroundCheckProvider.cs` with what Certn accepts.
 
 ## Not done yet
 
-- `api.gosits.com` (needs a CNAME `api` and a TXT `asuid.api` at the registrar, then a certificate).
 - Certn: a test key, the signing secret, and registering the notification address in Certn's portal.
 - The first administrator account (`Administration__Bootstrap__Email` / `__Password`).
 - Stripe webhook endpoint for production and its signing secret.
