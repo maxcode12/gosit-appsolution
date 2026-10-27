@@ -162,6 +162,7 @@
    * Raleway and Open Sans trio read dated and gave three different voices to one
    * product.
    */
+  --font-role-display: var(--font-fraunces);
   --font-role-heading: var(--font-jakarta);
   --font-role-control: var(--font-inter);
   --font-role-body: var(--font-inter);

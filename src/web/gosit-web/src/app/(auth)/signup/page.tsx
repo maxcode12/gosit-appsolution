@@ -17,12 +17,23 @@ export default async function SignupPage({
   const params = await searchParams;
   const raw = Array.isArray(params.postalCode) ? params.postalCode[0] : params.postalCode;
 
+  // `?type=` is set by the website's "Find a caregiver" / "Become a caregiver" buttons.
+  const type = Array.isArray(params.type) ? params.type[0] : params.type;
+  const accountType = type === "caregiver" ? "Caregiver" : type === "family" ? "CareRequester" : undefined;
+
   return (
-    <AuthCard title="Welcome to GoSit" subtitle="Sign up for free, no commitment">
+    <AuthCard
+      title={accountType === "Caregiver" ? "Become a GoSit caregiver" : "Welcome to GoSit"}
+      subtitle={
+        accountType === "Caregiver"
+          ? "Create your profile. You will complete your checks next."
+          : "Sign up for free, no commitment"
+      }
+    >
       <SocialLoginGroup />
       <div className="mt-6">
         {/* Carried from the landing page's search box, if that is where they came from. */}
-        <SignupForm postalCode={raw} />
+        <SignupForm postalCode={raw} accountType={accountType} />
       </div>
     </AuthCard>
   );

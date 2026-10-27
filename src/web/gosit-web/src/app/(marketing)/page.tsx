@@ -2,281 +2,393 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { buttonClassName } from "@/components/ui/button";
-import { ShieldIcon, StarIcon } from "@/components/ui/icons";
-import { SiteFooter } from "@/features/marketing/components/site-footer";
-import { HeroSearch } from "@/features/marketing/components/hero-search";
+import {
+  ArrowRightIcon,
+  CalendarCheckIcon,
+  CheckIcon,
+  ClockIcon,
+  IdCardIcon,
+  LockIcon,
+  VideoCameraIcon,
+} from "@/components/ui/marketing-icons";
 import { AppShowcase } from "@/features/marketing/components/app-showcase";
-import { ContactSection } from "@/features/marketing/components/contact-section";
-import { SiteHeader } from "@/features/marketing/components/site-header";
-import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
+import { Faq } from "@/features/marketing/components/faq";
+import { FAMILY_FAQ } from "@/features/marketing/components/faq-data";
+import { FinalCta } from "@/features/marketing/components/final-cta";
+import { Container, Eyebrow, SectionHeading } from "@/features/marketing/components/section";
+import { getStartedHref } from "@/features/marketing/public-mode";
 
 export const metadata: Metadata = {
   // Absolute, or the root layout's "%s | GoSit" template appends the brand to a title
-  // that already opens with it — "GoSit — Trusted care… | GoSit" in the tab and in
-  // every search result for the one page most people meet first.
+  // that already opens with it.
   title: { absolute: "GoSit — Trusted care for every stage of family life" },
   description:
-    "Verified caregivers across Ontario for children, seniors, and adults who need support. Every caregiver is identity-checked and vulnerable-sector screened.",
+    "Find verified, independent caregivers across Ontario for children, seniors, adults who need support, and pets. Identity-checked, vulnerable-sector screened, and booked in minutes.",
 };
 
 /**
- * The public landing page.
+ * The public front page.
  *
- * Replaces the Phase 0 placeholder. Figma node `1:3` is still not inspectable on this
- * seat, so this is designed in-repo against the product's own token system.
+ * The argument, in order: GoSit is for the whole arc of family life; here is who it is for;
+ * here is the care you can book; here is how little work it is; and here is precisely what
+ * stands behind the person at your door. For a marketplace where the thing being bought is
+ * trust, the safety section is the pitch, so it sits in the middle of the page rather than
+ * at the bottom of it.
  *
- * The argument it makes, in order: GoSit is for the whole arc of family life, not just
- * babysitting; here is the care you can actually book; here is how little work it is;
- * and here is precisely what we check before someone reaches your door. That last part
- * is the product — for a marketplace where the thing being bought is trust, the safety
- * section is not a footnote, it is the pitch.
+ * Nothing here is invented social proof. GoSit has not launched, and a claim about
+ * thousands of families on the page a family reads before trusting us with their child
+ * would be the worst possible place to begin. Every statement describes how the product
+ * works, and the product enforces it.
  */
-export default function LandingPage() {
+export default function HomePage() {
   return (
     <>
-      <SiteHeader />
-
-      <main>
-        <Hero />
-        <CareTypes />
-        <HowItWorks />
-        <TrustAndSafety />
-        <CaregiverApp />
-        <ForCaregivers />
-        {MARKETING_ONLY ? <ContactSection /> : null}
-      </main>
-
-      <SiteFooter />
+      <Hero />
+      <TrustStrip />
+      <Audiences />
+      <Services />
+      <HowItWorks />
+      <Safety />
+      <AppSection />
+      <FaqSection />
+      <FinalCta />
     </>
   );
 }
 
-/**
- * A photograph, a sentence, and one box to type into.
- *
- * Full-bleed: the image is the ground the words sit on, rather than a picture beside
- * them. That is the harder of the two arrangements to keep readable, and the two things
- * holding it up are the scrim and the crop — a face behind a headline is the failure
- * mode, and both are set to prevent it rather than to hope.
- *
- * Everything inside is pinned to fixed light-on-dark values instead of the theme's text
- * colours. The palette flips with the reader's system setting; a photograph does not.
- *
- * The photograph is illustrative and licensed from Unsplash; the people in it are not
- * GoSit caregivers. See public/images/CREDITS.md — that distinction is not decorative,
- * and nothing here should ever caption one of them as a real caregiver.
- */
 function Hero() {
   return (
-    <>
-      <section className="relative isolate overflow-hidden">
+    <section className="hero-wash relative overflow-hidden">
+      <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
+
+      <Container className="relative grid items-center gap-16 pb-24 pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:pb-32 lg:pt-24">
+        <div>
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-border bg-surface/80 py-1.5 pl-2 pr-4 font-control text-sm font-medium text-text-secondary shadow-xs backdrop-blur">
+            <span className="grid size-6 place-items-center rounded-full bg-brand-primary text-text-on-brand">
+              <CheckIcon className="size-3.5" />
+            </span>
+            Verified caregivers across Ontario
+          </span>
+
+          <h1 className="font-display mt-8 text-[2.75rem] leading-[1.02] text-text-primary sm:text-6xl lg:text-[4.75rem]">
+            Care you can <em className="text-brand-primary">trust</em>, for every stage of family life.
+          </h1>
+
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-text-secondary sm:text-xl">
+            Your child after school, your mother on a Tuesday morning, a family member who needs
+            specialised support, even the dog. Find someone checked, nearby and right for the job.
+          </p>
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Link href={getStartedHref("family")} className={buttonClassName("primary", "!rounded-full", "xl")}>
+              Find a caregiver
+              <ArrowRightIcon />
+            </Link>
+            <Link href={getStartedHref("caregiver")} className={buttonClassName("ghost", "!rounded-full", "xl")}>
+              Become a caregiver
+            </Link>
+          </div>
+
+          <ul className="mt-10 flex flex-col gap-3 text-sm font-medium text-text-secondary sm:flex-row sm:flex-wrap sm:gap-x-7">
+            {["Identity and vulnerable-sector checked", "Free to join", "Meet on video before you book"].map(
+              (point) => (
+                <li key={point} className="flex items-center gap-2">
+                  <CheckIcon className="size-4 text-brand-primary" />
+                  {point}
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+
+        <HeroCollage />
+      </Container>
+    </section>
+  );
+}
+
+/**
+ * Two photographs and two cards that show the product's promises as they would look in
+ * use. The cards are illustrations of the app, not testimonials: they carry no names and
+ * no people, because the photographs are licensed stock and must never be presented as
+ * real GoSit caregivers (see public/images/CREDITS.md).
+ */
+function HeroCollage() {
+  return (
+    <div className="relative mx-auto aspect-[4/5] w-full max-w-md lg:max-w-none">
+      <div className="absolute right-0 top-0 h-[88%] w-[84%] overflow-hidden rounded-[2.5rem] shadow-lg ring-1 ring-border">
         <Image
           src="/images/hero.jpg"
           alt="A caregiver and a young child reading a book together, both laughing."
           fill
-          // The only image above the fold on the page people land on first.
           priority
-          sizes="100vw"
-          /*
-           * Pushed off-centre on purpose. The pair sit in the middle of the frame, and a
-           * centred crop puts a face directly behind the headline — the failure this
-           * layout has to design around rather than hope about. Shifting the focal point
-           * right moves them clear of the text and leaves the tent and wall as the ground
-           * the words sit on.
-           */
-          className="object-cover object-[72%_center] sm:object-[68%_center]"
+          sizes="(min-width: 1024px) 40vw, 90vw"
+          className="object-cover object-[70%_center]"
         />
-
-        {/*
-          The scrim, and the reason the text is readable at all.
-
-          Fixed dark values rather than theme tokens: the ground here is a photograph, not
-          the page, so it must not invert with the palette — a scrim that goes pale in
-          light mode would leave white text on a lit room. Vertical on a phone, where the
-          copy spans the full width; horizontal on a wide screen, where it does not.
-        */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-[rgba(12,20,22,0.94)] via-[rgba(12,20,22,0.72)] to-[rgba(12,20,22,0.45)] lg:bg-gradient-to-r lg:from-[rgba(12,20,22,0.94)] lg:via-[rgba(12,20,22,0.75)] lg:to-transparent"
-        />
-
-        <div className="relative mx-auto flex min-h-[34rem] max-w-6xl flex-col justify-center px-4 py-16 sm:px-6 sm:py-20 lg:min-h-[40rem]">
-          <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-pill border border-white/25 bg-white/10 px-3.5 py-1.5 font-control text-sm font-medium text-text-on-deep backdrop-blur-sm">
-              <ShieldIcon />
-              Every caregiver is background-checked
-            </span>
-
-            <h1 className="mt-6 font-heading text-4xl font-extrabold leading-[1.08] tracking-tight text-text-on-deep sm:text-5xl lg:text-6xl">
-              Trusted care for every stage of{" "}
-              <span className="text-accent-on-deep">family life</span>
-            </h1>
-
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-text-on-deep/85">
-              Whether it is your child after school, your mother on a Tuesday morning, or
-              a family member who needs specialised support — find someone verified,
-              nearby, and right for the job.
-            </p>
-
-            <HeroSearch />
-
-            {MARKETING_ONLY ? null : (
-              <p className="mt-4 text-sm text-text-on-deep/70">
-                Free to join. No charge until a caregiver confirms your booking.{" "}
-                <Link
-                  href="/signup"
-                  className="underline underline-offset-2 hover:text-text-on-deep"
-                >
-                  Work as a caregiver
-                </Link>
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/*
-        Lifted out of the photograph. Three claims are the argument, and an argument set
-        over someone's living room is harder to read than one set on a plain ground.
-      */}
-      <div className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 sm:pt-16">
-        <TrustBar />
       </div>
-    </>
+
+      <div className="absolute bottom-0 left-0 aspect-square w-[44%] overflow-hidden rounded-[2rem] shadow-lg ring-[10px] ring-canvas">
+        <Image
+          src="/images/senior-care.jpg"
+          alt="A caregiver holding an older woman's hands, helping her up from a chair."
+          fill
+          sizes="(min-width: 1024px) 18vw, 40vw"
+          className="object-cover"
+        />
+      </div>
+
+      <div className="drift absolute -left-2 top-[14%] flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 pr-5 shadow-lg sm:-left-6">
+        <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-primary">
+          <IdCardIcon className="size-6" />
+        </span>
+        <div>
+          <p className="font-heading text-sm font-bold text-text-primary">Identity verified</p>
+          <p className="text-xs text-text-secondary">Vulnerable-sector checked</p>
+        </div>
+      </div>
+
+      <div className="drift-slow absolute -right-2 bottom-[8%] flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 pr-5 shadow-lg sm:-right-4">
+        <span className="grid size-11 place-items-center rounded-xl bg-accent-soft text-brand-secondary">
+          <ClockIcon className="size-6" />
+        </span>
+        <div>
+          <p className="font-heading text-sm font-bold text-text-primary">Checked in · 3:02 pm</p>
+          <p className="text-xs text-text-secondary">Billed for time actually worked</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
-/**
- * The three claims that survive scrutiny.
- *
- * Deliberately not "10,000 happy families" — GoSit has not launched, and inventing
- * social proof on the one page a family reads before trusting us with their child is
- * exactly the wrong place to start. These are statements about how the product works,
- * every one of which the code actually enforces.
- */
-const TRUST_POINTS = [
-  {
-    title: "Identity and vulnerable-sector checked",
-    body: "Nobody appears in search until both checks clear. No exceptions, no “pending” badge.",
-  },
-  {
-    title: "You are charged for time actually worked",
-    body: "Your caregiver checks in and out. The final bill follows the clock, not the estimate.",
-  },
-  {
-    title: "Qualified for the care you booked",
-    body: "Dementia support, autism support, first aid — matched against what they are certified for.",
-  },
+const STRIP = [
+  "Identity verified",
+  "Vulnerable-sector screened",
+  "Video interviews first",
+  "Check-in and check-out",
+  "Private care notes",
+  "Paid for time worked",
+  "Non-medical care",
+  "Ontario-based",
 ];
 
-function TrustBar() {
-  return (
-    <ul className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
-      {TRUST_POINTS.map((point) => (
-        <li key={point.title} className="surface-card p-6">
-          <h2 className="font-heading text-base font-semibold text-text-primary">
-            {point.title}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-text-secondary">{point.body}</p>
+/** A slow, endless ribbon of the product's promises. Pauses under the pointer. */
+function TrustStrip() {
+  const row = (hidden: boolean) => (
+    <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-4 pr-4">
+      {STRIP.map((item) => (
+        <li
+          key={item}
+          className="flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-surface px-5 py-2.5 font-control text-sm font-medium text-text-secondary"
+        >
+          <CheckIcon className="size-4 text-brand-primary" />
+          {item}
         </li>
       ))}
     </ul>
   );
+
+  return (
+    <div className="marquee overflow-hidden border-y border-border bg-canvas py-5 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+      <div className="marquee-track flex w-max">
+        {row(false)}
+        {row(true)}
+      </div>
+    </div>
+  );
 }
 
-/**
- * The five care categories, matching the service taxonomy the API actually serves —
- * `docs/PLAN.md` Phase 3 added Pet Care, and this list has to keep up with it rather
- * than being written once at launch. Written for the person searching, not the
- * database: "someone to be there after school" rather than "AFTER_SCHOOL_CARE".
- */
-const CARE_TYPES = [
+function Audiences() {
+  return (
+    <section className="py-24 sm:py-32">
+      <Container>
+        <SectionHeading
+          align="center"
+          eyebrow="Two sides, one marketplace"
+          title="Whichever side you are on, it starts here."
+        />
+
+        <div className="mt-16 grid gap-6 lg:grid-cols-2">
+          <article className="reveal group relative overflow-hidden rounded-[2rem] border border-border bg-surface shadow-md">
+            <div className="relative aspect-[16/9] overflow-hidden">
+              <Image
+                src="/images/family-support.jpg"
+                alt="Three adults of different generations cooking a meal together in a kitchen."
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            </div>
+            <div className="p-8 sm:p-10">
+              <Eyebrow>For families</Eyebrow>
+              <h3 className="font-display mt-4 text-3xl leading-tight text-text-primary sm:text-4xl">
+                Find someone you would be glad to leave at home.
+              </h3>
+              <p className="mt-4 text-text-secondary">
+                Browse checked caregivers nearby, read their experience, message them, and meet on video
+                before you decide.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm font-medium text-text-primary">
+                {["Free to join and browse", "Charged only once a caregiver confirms", "Your address stays private until you book"].map(
+                  (point) => (
+                    <li key={point} className="flex items-center gap-2.5">
+                      <CheckIcon className="size-4 text-brand-primary" />
+                      {point}
+                    </li>
+                  ),
+                )}
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href={getStartedHref("family")} className={buttonClassName("primary", "!rounded-full", "lg")}>
+                  Find a caregiver
+                  <ArrowRightIcon />
+                </Link>
+                <Link href="/for-families" className={buttonClassName("ghost", "!rounded-full", "lg")}>
+                  Learn more
+                </Link>
+              </div>
+            </div>
+          </article>
+
+          <article className="reveal deep-wash group relative overflow-hidden rounded-[2rem] shadow-md">
+            <div className="relative aspect-[16/9] overflow-hidden">
+              <Image
+                src="/images/pet-care.jpg"
+                alt="A person walking a golden retriever on a leash along a paved path."
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand-deep)] to-transparent" />
+            </div>
+            <div className="p-8 sm:p-10">
+              <Eyebrow light>For caregivers</Eyebrow>
+              <h3 className="font-display mt-4 text-3xl leading-tight text-text-on-deep sm:text-4xl">
+                Set your rate. Choose your hours. Do the work you are good at.
+              </h3>
+              <p className="mt-4 text-text-on-deep/80">
+                Families find you already knowing your experience and what you are certified for. You accept
+                or decline every request, and you are paid for the time you work.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm font-medium text-text-on-deep">
+                {["You are an independent caregiver, not an employee", "See care needs before the day", "One clear statement of every fee"].map(
+                  (point) => (
+                    <li key={point} className="flex items-center gap-2.5">
+                      <CheckIcon className="size-4 text-accent-on-deep" />
+                      {point}
+                    </li>
+                  ),
+                )}
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href={getStartedHref("caregiver")} className={buttonClassName("secondary", "!rounded-full", "lg")}>
+                  Become a caregiver
+                  <ArrowRightIcon />
+                </Link>
+                <Link href="/for-caregivers" className={buttonClassName("light", "!rounded-full", "lg")}>
+                  Learn more
+                </Link>
+              </div>
+            </div>
+          </article>
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+const SERVICES = [
   {
     name: "Child care",
+    blurb: "Babysitting, nannies, after-school and overnight care.",
     image: "/images/child-care.jpg",
     alt: "A caregiver and a young girl building with coloured blocks at a table.",
-    blurb: "Babysitting, nannies, after-school and overnight care.",
-    examples: ["Babysitting", "Nanny care", "After-school", "Overnight"],
+    className: "lg:col-span-3 lg:row-span-2 min-h-[26rem]",
   },
   {
     name: "Senior care",
+    blurb: "Company, meals, errands and getting to appointments.",
     image: "/images/senior-care.jpg",
     alt: "A caregiver holding an older woman's hands, helping her up from a chair.",
-    blurb: "Company, meals, errands and getting to appointments.",
-    examples: ["Companionship", "Meal support", "Mobility", "Dementia care"],
+    className: "lg:col-span-3 min-h-[15rem]",
   },
   {
     name: "Specialized support",
+    blurb: "Caregivers experienced with additional needs.",
     image: "/images/specialised-support.jpg",
     alt: "A companion walking with someone in a wheelchair across a field at sunset.",
-    blurb: "Caregivers experienced with additional needs.",
-    examples: ["Autism support", "Communication", "Behavioural", "Respite"],
+    className: "lg:col-span-3 min-h-[15rem]",
   },
   {
     name: "Family support",
+    blurb: "The practical help that keeps a household going.",
     image: "/images/family-support.jpg",
     alt: "Three adults of different generations cooking a meal together in a kitchen.",
-    blurb: "The practical help that keeps a household going.",
-    examples: ["Respite care", "Transport", "Light household", "Routine support"],
-  },
-  {
-    name: "Pet care",
-    image: "/images/pet-care.jpg",
-    alt: "A person walking a golden retriever on a leash along a paved path.",
-    blurb: "Walks, drop-in visits, in-home sitting and boarding.",
-    examples: ["Dog walking", "Drop-in visits", "In-home sitting", "Boarding"],
+    className: "lg:col-span-3 min-h-[15rem]",
   },
 ];
 
-function CareTypes() {
+function Services() {
   return (
-    <section id="care" className="scroll-mt-20 border-t border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <SectionHeading
-          eyebrow="What you can book"
-          title="Care for the whole family, not just the youngest"
-          body="GoSit started with childcare. Families kept asking for help with their parents too, so that is what we built."
-        />
+    <section className="border-y border-border bg-surface py-24 sm:py-32">
+      <Container>
+        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+          <SectionHeading
+            eyebrow="Care we cover"
+            title="Care for the whole family, not just the youngest."
+            body="GoSit started with child care. Families kept asking for help with their parents too, so that is what we built."
+          />
+          <Link href="/services" className={buttonClassName("ghost", "!rounded-full self-start lg:self-auto", "lg")}>
+            See every service
+            <ArrowRightIcon />
+          </Link>
+        </div>
 
-        <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {CARE_TYPES.map((type) => (
-            <li key={type.name} className="surface-card-interactive overflow-hidden">
-              {/*
-                A fixed aspect ratio rather than a fixed height, so four photographs of
-                different proportions still line up as four cards rather than four
-                nearly-identical rectangles.
-              */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-surface-muted">
-                <Image
-                  src={type.image}
-                  alt={type.alt}
-                  fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="font-heading text-lg font-semibold text-text-primary">
-                  {type.name}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">
-                  {type.blurb}
-                </p>
-                <ul className="mt-4 flex flex-wrap gap-1.5">
-                  {type.examples.map((example) => (
-                    <li
-                      key={example}
-                      className="rounded-pill bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-secondary"
-                    >
-                      {example}
-                    </li>
-                  ))}
-                </ul>
+        <ul className="mt-14 grid gap-5 lg:auto-rows-[15rem] lg:grid-cols-6">
+          {SERVICES.map((service) => (
+            <li
+              key={service.name}
+              className={`reveal group relative overflow-hidden rounded-[1.75rem] ${service.className}`}
+            >
+              <Image
+                src={service.image}
+                alt={service.alt}
+                fill
+                sizes="(min-width: 1024px) 33vw, 100vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              {/* Fixed dark values: the ground is a photograph, which does not follow the theme. */}
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-t from-[rgba(12,20,22,0.85)] via-[rgba(12,20,22,0.2)] to-transparent"
+              />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
+                <h3 className="font-display text-2xl text-white sm:text-3xl">{service.name}</h3>
+                <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-white/85">{service.blurb}</p>
               </div>
             </li>
           ))}
+
+          <li className="reveal group relative overflow-hidden rounded-[1.75rem] lg:col-span-3 min-h-[15rem]">
+            <Image
+              src="/images/pet-care.jpg"
+              alt="A person walking a golden retriever on a leash along a paved path."
+              fill
+              sizes="(min-width: 1024px) 33vw, 100vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-[rgba(12,20,22,0.85)] via-[rgba(12,20,22,0.2)] to-transparent"
+            />
+            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
+              <h3 className="font-display text-2xl text-white sm:text-3xl">Pet care</h3>
+              <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-white/85">
+                Walks, drop-in visits, in-home sitting and boarding.
+              </p>
+            </div>
+          </li>
         </ul>
-      </div>
+      </Container>
     </section>
   );
 }
@@ -285,132 +397,151 @@ const STEPS = [
   {
     title: "Tell us who needs care",
     body: "Their age, what a good day looks like, and anything a caregiver should know. Private, and shared only with someone you book.",
+    icon: <CalendarCheckIcon className="size-6" />,
   },
   {
-    title: "Choose someone nearby",
-    body: "Browse verified caregivers in your area with their rate, experience and certifications. Message them before you commit.",
+    title: "Choose and meet someone",
+    body: "Compare checked caregivers nearby by rate, experience and certifications. Message them, and meet on video before you commit.",
+    icon: <VideoCameraIcon className="size-6" />,
   },
   {
     title: "Book, and pay for the time worked",
-    body: "They confirm, they check in when they arrive, and you are charged for the hours they were actually there.",
+    body: "They confirm, check in when they arrive, and you are charged for the hours they were actually there.",
+    icon: <ClockIcon className="size-6" />,
   },
 ];
 
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-20">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+    <section className="py-24 sm:py-32">
+      <Container>
         <SectionHeading
+          align="center"
           eyebrow="How it works"
-          title="Three steps, and nothing taken up front"
+          title="Three steps, and nothing taken up front."
           body="No subscription to browse, no fee to message, and no charge until your caregiver says yes."
         />
 
-        <ol className="mt-14 grid gap-6 md:grid-cols-3">
+        <ol className="relative mt-20 grid gap-12 md:grid-cols-3 md:gap-8">
+          <div
+            aria-hidden
+            className="absolute left-[16%] right-[16%] top-7 hidden border-t-2 border-dashed border-border-strong md:block"
+          />
           {STEPS.map((step, index) => (
-            <li key={step.title} className="relative">
-              <span
-                aria-hidden
-                className="grid size-11 place-items-center rounded-full bg-brand-primary font-heading text-lg font-bold text-text-on-brand shadow-brand"
-              >
-                {index + 1}
+            <li key={step.title} className="reveal relative text-center">
+              <span className="relative mx-auto grid size-14 place-items-center rounded-full bg-brand-primary text-text-on-brand shadow-brand ring-8 ring-canvas">
+                {step.icon}
               </span>
-              <h3 className="mt-5 font-heading text-lg font-semibold text-text-primary">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-text-secondary">{step.body}</p>
+              <p className="font-display mt-6 text-6xl text-brand-soft-border">0{index + 1}</p>
+              <h3 className="mt-1 font-heading text-xl font-bold text-text-primary">{step.title}</h3>
+              <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-text-secondary">{step.body}</p>
             </li>
           ))}
         </ol>
-      </div>
+
+        <div className="mt-14 text-center">
+          <Link href="/how-it-works" className={buttonClassName("ghost", "!rounded-full", "lg")}>
+            The full walkthrough
+            <ArrowRightIcon />
+          </Link>
+        </div>
+      </Container>
     </section>
   );
 }
 
-/**
- * Exactly what is checked, in the order it happens. Concrete enough to be verifiable —
- * a vague "we take safety seriously" reassures nobody who is actually worried.
- */
 const CHECKS = [
   {
-    title: "Government ID, matched to the person",
+    icon: <IdCardIcon className="size-6" />,
+    title: "Identity, matched to the person",
     body: "Every caregiver proves who they are before they can be listed.",
   },
   {
-    title: "Vulnerable sector check",
-    body: "Required for anyone working with children or vulnerable adults. Not optional, not skippable.",
+    icon: <CheckIcon className="size-6" />,
+    title: "Screened for the care they offer",
+    body: "A vulnerable-sector check for care of people. Not optional, not skippable.",
   },
   {
-    title: "Certifications verified, not just claimed",
-    body: "First Aid, CPR and specialist training are reviewed by our team before they count.",
+    icon: <LockIcon className="size-6" />,
+    title: "Your address and notes stay private",
+    body: "Shared only with the caregiver you booked, and only once they accept.",
   },
   {
-    title: "Your address stays private until you book",
-    body: "Searches show an approximate area. Your street address is shared only once you have chosen someone.",
-  },
-  {
-    title: "Care needs shared with one caregiver, once",
-    body: "Allergies, triggers and routines go to the person you booked — after they accept, and to nobody else.",
-  },
-  {
-    title: "Every booking on the record",
-    body: "Times, messages and payments are kept, so there is always an account of what happened.",
+    icon: <VideoCameraIcon className="size-6" />,
+    title: "Meet first, inside GoSit",
+    body: "Video interviews happen on the platform and are recorded for safety.",
   },
 ];
 
-function TrustAndSafety() {
+function Safety() {
   return (
-    <section id="safety" className="scroll-mt-20 border-y border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <SectionHeading
-          eyebrow="Trust & safety"
-          title="What we check before anyone reaches your door"
-          body="You are letting a stranger into your home to look after someone you love. Here is exactly what stands behind that."
-        />
+    <section className="px-3 sm:px-5">
+      <div className="deep-wash relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] sm:rounded-[2.5rem]">
+        <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 opacity-15" />
+        <div className="relative grid gap-14 px-6 py-20 sm:px-14 sm:py-28 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="reveal">
+            <Eyebrow light>Trust and safety</Eyebrow>
+            <h2 className="font-display mt-5 text-4xl leading-[1.06] text-text-on-deep sm:text-6xl">
+              What stands behind the person at your door.
+            </h2>
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-text-on-deep/80">
+              You are letting someone into your home to look after a person you love. Here is exactly what we
+              check, and where our job stops.
+            </p>
+            <Link href="/safety" className={buttonClassName("light", "!rounded-full mt-9", "xl")}>
+              How we keep it safe
+              <ArrowRightIcon />
+            </Link>
+          </div>
 
-        <ul className="mt-14 grid gap-x-10 gap-y-8 md:grid-cols-2">
-          {CHECKS.map((check) => (
-            <li key={check.title} className="flex gap-4">
-              <span
-                aria-hidden
-                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-primary"
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {CHECKS.map((check) => (
+              <li
+                key={check.title}
+                className="reveal rounded-3xl border border-white/15 bg-white/[0.07] p-6 backdrop-blur-sm"
               >
-                <ShieldIcon />
-              </span>
-              <div>
-                <h3 className="font-heading text-base font-semibold text-text-primary">
-                  {check.title}
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-                  {check.body}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+                <span className="grid size-12 place-items-center rounded-2xl bg-white/15 text-accent-on-deep">
+                  {check.icon}
+                </span>
+                <h3 className="mt-5 font-heading text-lg font-bold text-text-on-deep">{check.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-text-on-deep/75">{check.body}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
 }
 
-/**
- * Real screenshots of the caregiver app, not a rendering of one.
- *
- * Placed right before the caregiver pitch: the copy there makes promises — set your own
- * rate, get paid for the hours you worked — and this is where someone can see the screen
- * that keeps them. See public/app-screenshots for how these were captured.
- */
-function CaregiverApp() {
+function AppSection() {
   return (
-    <section className="border-t border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <SectionHeading
-          eyebrow="The caregiver app"
-          title="Your day and your earnings, on your phone"
-          body="Check in when you arrive, see what's coming up, and watch your money clear — without opening a laptop."
-        />
+    <section className="py-24 sm:py-32">
+      <Container className="grid items-center gap-16 lg:grid-cols-2">
+        <div className="reveal">
+          <Eyebrow>The GoSit app</Eyebrow>
+          <h2 className="font-display mt-4 text-4xl leading-[1.08] text-text-primary sm:text-5xl">
+            Your day and your bookings, on your phone.
+          </h2>
+          <p className="mt-5 max-w-lg text-lg leading-relaxed text-text-secondary">
+            Check in when you arrive, see what is coming up, and follow every update in one inbox. Families
+            and caregivers see the same booking, so nobody is guessing.
+          </p>
+          <ul className="mt-8 space-y-3 text-text-primary">
+            {["One tap to check in and out", "Every message, in one conversation", "Clear earnings and payouts for caregivers"].map(
+              (point) => (
+                <li key={point} className="flex items-center gap-3 font-medium">
+                  <span className="grid size-6 place-items-center rounded-full bg-brand-soft text-brand-primary">
+                    <CheckIcon className="size-3.5" />
+                  </span>
+                  {point}
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
 
-        <div className="mt-14">
+        <div className="reveal">
           <AppShowcase
             screens={[
               {
@@ -436,88 +567,28 @@ function CaregiverApp() {
             ]}
           />
         </div>
-      </div>
+      </Container>
     </section>
   );
 }
 
-function ForCaregivers() {
+function FaqSection() {
   return (
-    <section id="caregivers" className="scroll-mt-20">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <div className="overflow-hidden rounded-card bg-brand-deep shadow-lg">
-          <div className="grid gap-10 p-8 sm:p-14 lg:grid-cols-2 lg:items-center">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-pill bg-white/15 px-3.5 py-1.5 font-control text-sm font-medium text-text-on-deep">
-                <StarIcon filled />
-                For caregivers
-              </span>
-
-              <h2 className="mt-6 font-heading text-3xl font-extrabold leading-tight tracking-tight text-text-on-deep sm:text-4xl">
-                Set your rate. Choose your hours. Get paid for the time you work.
-              </h2>
-
-              <p className="mt-5 text-lg leading-relaxed text-text-on-deep/80">
-                You decide what you charge and when you are free. Families come to you
-                already knowing your experience and what you are certified for.
-              </p>
-
-              <div className="mt-8">
-                {MARKETING_ONLY ? (
-                  <a
-                    href={CONTACT_ANCHOR}
-                    className={buttonClassName("secondary", "", "lg")}
-                  >
-                    Register your interest as a caregiver
-                  </a>
-                ) : (
-                  <Link href="/signup" className={buttonClassName("secondary", "", "lg")}>
-                    Join as a caregiver
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              {[
-                "You set your own hourly rate",
-                "Accept or decline every request",
-                "See the care needs before the day",
-                "One clear statement of every fee",
-              ].map((point) => (
-                <li
-                  key={point}
-                  className="rounded-control bg-white/10 px-4 py-3.5 text-sm font-medium text-text-on-deep"
-                >
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <section className="border-t border-border bg-surface py-24 sm:py-32">
+      <Container className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
+        <div>
+          <SectionHeading
+            eyebrow="Questions"
+            title="Good questions, plainly answered."
+            body="If you do not see yours, ask us. A real person replies."
+          />
+          <Link href="/faq" className={buttonClassName("ghost", "!rounded-full mt-8", "lg")}>
+            Read every answer
+            <ArrowRightIcon />
+          </Link>
         </div>
-      </div>
+        <Faq items={FAMILY_FAQ.slice(0, 5)} />
+      </Container>
     </section>
-  );
-}
-
-function SectionHeading({
-  eyebrow,
-  title,
-  body,
-}: {
-  eyebrow: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="mx-auto max-w-2xl text-center">
-      <p className="font-control text-sm font-semibold uppercase tracking-widest text-brand-primary">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 font-heading text-3xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-4xl">
-        {title}
-      </h2>
-      <p className="mt-4 text-lg leading-relaxed text-text-secondary">{body}</p>
-    </div>
   );
 }

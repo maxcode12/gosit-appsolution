@@ -22,7 +22,7 @@ const KINDS = [
  * throttles by IP. A visitor never sees a stack trace or a status code — every failure is
  * a sentence about what to do next.
  */
-export function ContactForm() {
+export function ContactForm({ defaultKind = "Family" }: { defaultKind?: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -144,7 +144,7 @@ export function ContactForm() {
         <label htmlFor="kind" className="mb-1.5 block font-control text-sm font-medium text-text-secondary">
           I am
         </label>
-        <select id="kind" name="kind" defaultValue="Family" className={inputClassName}>
+        <select id="kind" name="kind" defaultValue={defaultKind} className={inputClassName}>
           {KINDS.map((kind) => (
             <option key={kind.value} value={kind.value}>
               {kind.label}

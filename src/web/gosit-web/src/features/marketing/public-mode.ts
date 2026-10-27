@@ -1,20 +1,24 @@
 /**
- * Public, brochure-only build of the marketing site.
- *
- * Sign-up, log-in and search all need the API, and sign-up is closed. When this is on
- * (NEXT_PUBLIC_MARKETING_ONLY=true at build time), every route into an account is replaced
- * with the contact form instead of a page that cannot work. It is a build flag rather than
- * a code deletion so that turning the real app on is one setting, not a revert. See
- * scripts/build-marketing-site.mjs.
+ * Whether this build is the public brochure site (plain static files, no accounts) rather
+ * than the full web app. Only `scripts/build-marketing-site.mjs` sets the flag.
  */
 export const MARKETING_ONLY = process.env.NEXT_PUBLIC_MARKETING_ONLY === "true";
 
-/** Where the contact form lives on the page. */
-export const CONTACT_ANCHOR = "#contact";
+export const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5199";
+
+export type Audience = "family" | "caregiver";
 
 /**
- * The API the contact form posts to. The public site is static files, so the browser calls
- * the API directly; the API allows this website's address and no other.
+ * Where "Get started" goes.
+ *
+ * In the full app that is the real sign-up form, pre-set to the right kind of account. On the
+ * brochure build there is no sign-up to send anyone to (the API keeps registration closed
+ * until launch), so it goes to a page that takes their details for the early list instead.
+ * Every button on the site goes through here, so opening sign-up later is a build flag, not
+ * a hunt through the pages.
  */
-export const PUBLIC_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5199";
+export function getStartedHref(audience?: Audience): string {
+  const query = audience ? `?${MARKETING_ONLY ? "as" : "type"}=${audience}` : "";
+
+  return `${MARKETING_ONLY ? "/get-started" : "/signup"}${query}`;
+}

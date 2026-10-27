@@ -124,3 +124,104 @@ h3 {
     border-color: var(--color-brand-soft-border);
   }
 }
+
+/*
+ * ---- Public website --------------------------------------------------------
+ * Motion and display type for the marketing pages. Plain CSS rather than utilities
+ * because each is a keyframe or a feature query, which utilities cannot express.
+ */
+
+/* The display serif. A class (specificity 0,1,0) beats the element rule on h1-h3. */
+.font-display {
+  font-family: var(--font-role-display), ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /*
+   * Content rises into place as it scrolls into view. Driven by the scroll timeline
+   * rather than JavaScript, so it costs nothing to run and degrades to "already
+   * there" in a browser without support, which is the correct failure.
+   */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 40%;
+    }
+  }
+
+  .drift {
+    animation: drift 7s ease-in-out infinite;
+  }
+
+  .drift-slow {
+    animation: drift 9s ease-in-out infinite reverse;
+  }
+
+  .marquee-track {
+    animation: marquee 38s linear infinite;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+/* The page behind the hero: two soft washes and a faint dot grid. */
+.hero-wash {
+  background:
+    radial-gradient(60rem 36rem at 85% -10%, color-mix(in oklab, var(--color-brand-primary) 18%, transparent), transparent 60%),
+    radial-gradient(44rem 30rem at -10% 30%, color-mix(in oklab, var(--color-brand-secondary) 16%, transparent), transparent 60%),
+    var(--color-canvas);
+}
+
+.dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--color-text-primary) 14%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+.deep-wash {
+  background:
+    radial-gradient(40rem 24rem at 90% 0%, rgba(55, 190, 195, 0.35), transparent 60%),
+    radial-gradient(30rem 20rem at 0% 100%, rgba(253, 127, 18, 0.18), transparent 60%),
+    var(--color-brand-deep);
+}
+
+/* Native disclosure marker replaced by our own plus. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}

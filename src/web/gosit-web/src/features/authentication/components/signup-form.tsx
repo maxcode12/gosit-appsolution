@@ -26,7 +26,14 @@ function SubmitButton() {
  * is the one they asked for; dropping it would make the box on the front page
  * decorative. The action validates it before putting it anywhere near a redirect.
  */
-export function SignupForm({ postalCode }: { postalCode?: string }) {
+export function SignupForm({
+  postalCode,
+  accountType,
+}: {
+  postalCode?: string;
+  /** Which side of the marketplace the website button they pressed was for. */
+  accountType?: "CareRequester" | "Caregiver";
+}) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(registerAction, {});
 
   return (
@@ -41,7 +48,7 @@ export function SignupForm({ postalCode }: { postalCode?: string }) {
         </p>
       ) : null}
 
-      <AccountTypeChoice />
+      <AccountTypeChoice defaultValue={accountType} />
 
       <div className="flex flex-col gap-5 sm:flex-row">
         <TextInput

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
@@ -24,7 +24,20 @@ const inter = Inter({
   display: "swap",
 });
 
+/*
+ * A soft, warm serif for the public site's display headlines only. The signed-in app
+ * stays in Jakarta and Inter, where legibility at small sizes matters more than
+ * personality; the website is where a first impression is made.
+ */
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.gosits.com"),
   title: {
     default: "GoSit — Trusted care for every stage of family life",
     template: "%s | GoSit",
@@ -45,7 +58,7 @@ export default function RootLayout({
     // server's HTML — the server has no way to know what a given reader chose.
     <html
       lang="en-CA"
-      className={`${jakarta.variable} ${inter.variable}`}
+      className={`${jakarta.variable} ${inter.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
       <head>

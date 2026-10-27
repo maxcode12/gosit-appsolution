@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
-import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode";
+import { MARKETING_ONLY, getStartedHref } from "@/features/marketing/public-mode";
+import { Container } from "@/features/marketing/components/section";
 
 /**
  * The public footer.
@@ -13,80 +14,81 @@ import { CONTACT_ANCHOR, MARKETING_ONLY } from "@/features/marketing/public-mode
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <div className="flex flex-col gap-10 md:flex-row md:justify-between">
-          <div className="max-w-xs">
+      <Container className="py-16">
+        <div className="grid gap-12 lg:grid-cols-[1.4fr_2fr]">
+          <div className="max-w-sm">
             <Wordmark />
+            <p className="font-display mt-6 text-2xl leading-snug text-text-primary">
+              Trusted care for every stage of family life.
+            </p>
             <p className="mt-4 text-sm leading-relaxed text-text-secondary">
-              Trusted care for every stage of family life. Serving Ontario, with more of
-              Canada to come.
+              Serving Ontario, with more of Canada to come.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
             <FooterColumn
-              title="Care"
+              title="Families"
               links={[
-                { href: "#care", label: "Child care" },
-                { href: "#care", label: "Senior care" },
-                { href: "#care", label: "Specialized support" },
-                { href: "#care", label: "Family support" },
-                { href: "#care", label: "Pet care" },
+                { href: "/for-families", label: "For families" },
+                { href: "/services", label: "Care we cover" },
+                { href: "/how-it-works", label: "How it works" },
+                { href: getStartedHref("family"), label: "Find a caregiver" },
               ]}
             />
             <FooterColumn
-              title="GoSit"
+              title="Caregivers"
               links={[
-                { href: "#how", label: "How it works" },
-                { href: "#safety", label: "Trust & safety" },
-                { href: "#caregivers", label: "Become a caregiver" },
+                { href: "/for-caregivers", label: "Why GoSit" },
+                { href: getStartedHref("caregiver"), label: "Become a caregiver" },
+                { href: "/faq", label: "Caregiver FAQ" },
               ]}
             />
-            {MARKETING_ONLY ? (
-              <FooterColumn
-                title="Contact"
-                links={[{ href: CONTACT_ANCHOR, label: "Send us a message" }]}
-              />
-            ) : (
-              <FooterColumn
-                title="Account"
-                links={[
-                  { href: "/login", label: "Log in" },
-                  { href: "/signup", label: "Create an account" },
-                ]}
-              />
-            )}
+            <FooterColumn
+              title="Company"
+              links={[
+                { href: "/about", label: "About" },
+                { href: "/safety", label: "Trust & safety" },
+                { href: "/faq", label: "FAQ" },
+                { href: "/contact", label: "Contact" },
+              ]}
+            />
+            <FooterColumn
+              title="Account"
+              links={
+                MARKETING_ONLY
+                  ? [{ href: "/get-started", label: "Join the early list" }]
+                  : [
+                      { href: "/login", label: "Log in" },
+                      { href: "/signup", label: "Create an account" },
+                    ]
+              }
+            />
           </div>
         </div>
 
-        <div className="mt-12 border-t border-border pt-8">
+        <div className="mt-14 border-t border-border pt-8">
           <p className="max-w-3xl text-sm leading-relaxed text-text-muted">
-            GoSit arranges <strong className="font-semibold text-text-secondary">non-medical
-            care</strong>. Our caregivers do not administer medication, perform nursing
-            procedures, or provide therapy or diagnosis. If you need regulated health
-            care, speak to a licensed provider.
+            GoSit is a marketplace that connects families with independent caregivers. It arranges{" "}
+            <strong className="font-semibold text-text-secondary">non-medical care</strong>: caregivers on
+            GoSit do not administer medication, perform nursing procedures, or provide therapy or
+            diagnosis. If you need regulated health care, speak to a licensed provider. Screening
+            reduces risk; it is not a guarantee.
           </p>
           <p className="mt-4 text-sm text-text-muted">
-            © {new Date().getFullYear()} 11419056 Canada Inc., operating as GoSit. Made in
-            Ontario.
+            © {new Date().getFullYear()} 11419056 Canada Inc., operating as GoSit. Made in Ontario.
           </p>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }
 
-function FooterColumn({
-  title,
-  links,
-}: {
-  title: string;
-  links: { href: string; label: string }[];
-}) {
+function FooterColumn({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
     <div>
       <h2 className="font-control text-sm font-semibold text-text-primary">{title}</h2>
-      <ul className="mt-3 flex flex-col gap-2.5">
+      <ul className="mt-4 flex flex-col gap-3">
         {links.map((link) => (
           <li key={link.label}>
             <Link

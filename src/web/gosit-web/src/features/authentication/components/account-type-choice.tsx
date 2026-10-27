@@ -16,8 +16,14 @@ const OPTIONS = [
   { value: "Caregiver", label: "I am a caregiver" },
 ] as const;
 
-export function AccountTypeChoice({ name = "role" }: { name?: string }) {
-  const [selected, setSelected] = useState<string>(OPTIONS[0].value);
+export function AccountTypeChoice({
+  name = "role",
+  defaultValue = OPTIONS[0].value,
+}: {
+  name?: string;
+  defaultValue?: (typeof OPTIONS)[number]["value"];
+}) {
+  const [selected, setSelected] = useState<string>(defaultValue);
 
   return (
     <fieldset className="w-full">

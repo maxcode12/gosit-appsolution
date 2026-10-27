@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "subtle" | "danger";
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "subtle" | "danger" | "light";
+export type ButtonSize = "sm" | "md" | "lg" | "xl";
 
 /*
  * Buttons.
@@ -22,6 +22,9 @@ const variantClasses: Record<ButtonVariant, string> = {
     "border border-border-strong bg-surface text-text-primary shadow-xs hover:border-brand-primary hover:text-brand-primary",
   subtle:
     "bg-surface-muted text-text-primary hover:bg-border",
+  // For full-bleed deep-teal panels, where the other variants would sit on their own colour.
+  light:
+    "bg-white text-brand-deep shadow-md hover:bg-brand-soft hover:-translate-y-px active:translate-y-0",
   danger:
     "bg-danger-soft text-danger-accent hover:bg-danger-accent hover:text-white",
 };
@@ -30,6 +33,7 @@ const sizeClasses: Record<ButtonSize, string> = {
   sm: "h-9 px-3.5 text-sm gap-1.5",
   md: "h-11 px-5 text-sm gap-2",
   lg: "h-12 px-6 text-base gap-2",
+  xl: "h-14 px-8 text-base gap-2.5",
 };
 
 const baseClasses =
