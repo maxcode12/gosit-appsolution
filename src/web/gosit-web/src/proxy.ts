@@ -57,7 +57,7 @@ function isPrefetch(request: NextRequest): boolean {
   );
 }
 
-export function proxy(request: NextRequest) {
+function routeByRole(request: NextRequest, to: (path: string) => URL) {
   const role = request.cookies.get("gosit_role")?.value;
 
   // Signed out, or a role this does not route on: let the page decide.
@@ -68,7 +68,7 @@ export function proxy(request: NextRequest) {
   const area = areaOf(request.nextUrl.pathname);
 
   if (area && area !== role) {
-    return NextResponse.redirect(new URL(homeFor(role as Role), request.url));
+    return NextResponse.redirect(to(homeFor(role as Role)));
   }
 
   // The access cookie carries the token's own expiry, so the browser drops it the moment
@@ -88,26 +88,129 @@ export function proxy(request: NextRequest) {
         )}`
       : "/login";
 
-    return NextResponse.redirect(new URL(destination, request.url));
+    return NextResponse.redirect(to(destination));
   }
 
   return NextResponse.next();
 }
 
 /**
- * Add a new top-level route for any side to both `AREAS` above and this matcher.
+ * One server, two front doors.
+ *
+ * app.gosits.com is where families and caregivers sign in; admin.gosits.com is where staff
+ * work. Both are this same server, told apart by the Host header, so the two sites share
+ * one deployment but never share a screen: staff screens are not reachable on the families'
+ * address and the reverse. Locally neither variable is set and none of this applies.
+ *
+ * Again navigation, not authorisation — the API refuses a family member's token on every
+ * admin endpoint whatever address they typed.
+ */
+const APP_HOST = process.env.APP_HOSTNAME?.toLowerCase();
+const ADMIN_HOST = process.env.ADMIN_HOSTNAME?.toLowerCase();
+const MARKETING_ORIGIN = process.env.MARKETING_ORIGIN ?? "https://www.gosits.com";
+
+type Door = "app" | "admin";
+
+const SIGNED_OUT_PAGES = ["/login", "/forgot-password", "/reset-password", "/verify-email"];
+const SHARED_PATHS = ["/session", "/documents", "/recordings"];
+const MARKETING_PATHS = [
+  "/about", "/contact", "/faq", "/for-caregivers", "/for-families",
+  "/get-started", "/how-it-works", "/safety", "/services",
+];
+
+function underPath(pathname: string, prefixes: readonly string[]): boolean {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+function requestHost(request: NextRequest): string {
+  const raw = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
+  return raw.split(",")[0].split(":")[0].trim().toLowerCase();
+}
+
+function doorOf(request: NextRequest): Door | undefined {
+  const host = requestHost(request);
+
+  if (ADMIN_HOST && host === ADMIN_HOST) {
+    return "admin";
+  }
+
+  return APP_HOST && host === APP_HOST ? "app" : undefined;
+}
+
+/** Where a request for `path` on this host should really go, or undefined to carry on. */
+function hostRedirect(door: Door, request: NextRequest): string | undefined {
+  const { pathname, search } = request.nextUrl;
+  const role = request.cookies.get("gosit_role")?.value;
+
+  if (door === "admin") {
+    if (pathname === "/") {
+      return "/admin";
+    }
+
+    // Anyone signed in as something other than staff belongs on the other address.
+    if (role && role !== "Admin" && !underPath(pathname, SHARED_PATHS)) {
+      return `https://${APP_HOST}${pathname === "/login" ? "/" : ""}`;
+    }
+
+    return underPath(pathname, ["/admin", ...SIGNED_OUT_PAGES, ...SHARED_PATHS])
+      ? undefined
+      : "/login";
+  }
+
+  if (underPath(pathname, ["/admin"])) {
+    return `https://${ADMIN_HOST}${pathname}${search}`;
+  }
+
+  if (underPath(pathname, MARKETING_PATHS) || pathname === "/sitemap.xml") {
+    return `${MARKETING_ORIGIN}${pathname}`;
+  }
+
+  if (pathname === "/") {
+    return ROLES.includes(role as Role) ? homeFor(role as Role) : "/login";
+  }
+
+  return undefined;
+}
+
+export function proxy(request: NextRequest) {
+  const door = doorOf(request);
+
+  // Redirect targets must carry the address the visitor typed. Behind the platform's front
+  // door the server itself is listening on a private address and port.
+  const to = (path: string) =>
+    door
+      ? new URL(path, `https://${requestHost(request)}`)
+      : new URL(path, request.url);
+
+  if (door) {
+    const target = hostRedirect(door, request);
+
+    if (target) {
+      return NextResponse.redirect(
+        target.startsWith("https://") ? target : to(target),
+      );
+    }
+  }
+
+  const response = areaOf(request.nextUrl.pathname)
+    ? routeByRole(request, to)
+    : NextResponse.next();
+
+  if (door) {
+    // Sign-in screens and staff tools have no business in a search index.
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+
+  return response;
+}
+
+/**
+ * Add a new top-level route for any side to `AREAS` above (the matcher already sees every page).
  * The route-group layouts repeat the check as a backstop for exactly that oversight —
  * they cannot prevent the wasted fetch, but they do prevent the wrong section showing.
  */
 export const config = {
-  matcher: [
-    "/caregiver/:path*",
-    "/admin/:path*",
-    "/dashboard/:path*",
-    "/saved/:path*",
-    "/bookings/:path*",
-    "/messages/:path*",
-    "/account/:path*",
-    "/caregivers/:path*",
-  ],
+  // Everything except the framework's own files and static assets: the host rules above
+  // have to see every page. The role routing inside only acts on the areas it lists.
+  matcher: ["/((?!_next/|images/|.*\\..*).*)"],
 };

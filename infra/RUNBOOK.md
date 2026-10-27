@@ -9,6 +9,7 @@ Subscription **Zeezo Tech** (`782a1f48-4d72-45b7-881e-b35da2f4d3ef`), shared wit
 | What | Name | Notes |
 |---|---|---|
 | Public website | `swa-gosit-web` (rg `rg-gosit-web`) | Static Web Apps, free tier. `www.gosits.com` |
+| Family, caregiver and staff web app | `app-gosit-web-kuu4l` (rg `rg-gosit-prod`) | App Service on the same plan, runs the Next.js container. One server answers both `app.gosits.com` (families and caregivers) and `admin.gosits.com` (staff); `src/proxy.ts` keeps the two sides on their own screens by Host header. |
 | API | `app-gosit-api-kuu4l` (rg `rg-gosit-prod`, Canada Central) | App Service, Linux B1, runs the container, always on |
 | App Service plan | `asp-gosit-prod` | Has room for the web app too |
 | Database | `psql-gosit-kuu4l-p` | PostgreSQL 16, B1ms, 32 GB, **private network only** (no public address) |
@@ -33,6 +34,19 @@ az webapp restart -g rg-gosit-prod -n app-gosit-api-kuu4l
 ```
 
 Database changes apply by themselves on start (`Database__MigrateOnStartup=true`). The database has no public address, so there is no way to run SQL from a laptop. The health check `/health/ready` includes the database.
+
+## Deploy the web app (app. and admin.)
+
+```bash
+TAG=w-$(date +%Y%m%d%H%M)
+az acr build -r acrgositkuu4l -t gosit-web:$TAG -f src/web/gosit-web/Dockerfile   --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.gosits.com   --build-arg NEXT_PUBLIC_SITE_URL=https://app.gosits.com src/web/gosit-web
+az webapp config container set -g rg-gosit-prod -n app-gosit-web-kuu4l   --container-image-name acrgositkuu4l.azurecr.io/gosit-web:$TAG
+az webapp restart -g rg-gosit-prod -n app-gosit-web-kuu4l
+```
+
+`NEXT_PUBLIC_*` values are baked in at build time, so changing one means a rebuild. The Windows CLI prints a harmless unicode crash while streaming the build log; check `az acr task list-runs -r acrgositkuu4l --top 1` for the real result. Settings on the app: `API_BASE_URL`, `APP_HOSTNAME`, `ADMIN_HOSTNAME`, `MARKETING_ORIGIN`.
+
+Binding a domain needs, at the registrar, a CNAME (`app` or `admin` to `app-gosit-web-kuu4l.azurewebsites.net`) and a TXT (`asuid.app` or `asuid.admin`, value = the app's `customDomainVerificationId`, the same value as for the API). Then `az webapp config hostname add`, `az webapp config ssl create`, `az webapp config ssl bind`, as for `api.gosits.com`. Until a hostname is bound, App Service answers 404 "Site Not Found" for it.
 
 ## Deploy the public website
 
