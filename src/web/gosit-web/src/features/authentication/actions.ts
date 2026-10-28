@@ -179,7 +179,10 @@ export async function registerAction(
     };
   }
 
-  redirect(await startSession(response, toPostalCode(formData.get("postalCode"))));
+  const destination = await startSession(response, toPostalCode(formData.get("postalCode")));
+
+  // A new caregiver has only given the basics; the setup checklist is where the rest happens.
+  redirect(destination === homePathFor("Caregiver") ? "/caregiver/setup" : destination);
 }
 
 export async function logoutAction(): Promise<void> {

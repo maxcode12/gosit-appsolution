@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { buttonClassName } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listBookings } from "@/features/bookings/api";
 import { formatMoney } from "@/features/bookings/components/booking-status";
@@ -27,22 +27,9 @@ export const metadata: Metadata = {
 export default async function CaregiverTodayPage() {
   const profile = await getMyCaregiverProfile();
 
+  // Sign-up only collects the basics; the real registration is the setup checklist.
   if (!profile) {
-    return (
-      <DashboardShell items={caregiverNav} currentPath="/caregiver" heading="Welcome to GoSit">
-        <div className="max-w-2xl">
-          <EmptyState
-            title="Set up your profile"
-            description="Tell families what you charge, where you work and what care you offer. Once your checks are done you will start appearing in search."
-            action={
-              <Link href="/caregiver/account" className={buttonClassName()}>
-                Get started
-              </Link>
-            }
-          />
-        </div>
-      </DashboardShell>
-    );
+    redirect("/caregiver/setup");
   }
 
   const [bookings, earnings, verifications] = await Promise.all([

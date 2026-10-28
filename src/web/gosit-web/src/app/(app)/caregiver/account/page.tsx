@@ -78,6 +78,7 @@ export default async function CaregiverAccountPage() {
         ) : null}
 
         <Section
+          id="about"
           heading="About you"
           description="What families see, and what you charge."
         >
@@ -87,6 +88,7 @@ export default async function CaregiverAccountPage() {
         {profile ? (
           <>
             <Section
+              id="services"
               heading="What you offer"
               description="The kinds of care families can book you for."
             >
@@ -100,6 +102,7 @@ export default async function CaregiverAccountPage() {
             </Section>
 
             <Section
+              id="availability"
               heading="When you are free"
               description="Your usual week. You can still decline anything."
             >
@@ -107,6 +110,7 @@ export default async function CaregiverAccountPage() {
             </Section>
 
             <Section
+              id="certifications"
               heading="Certifications"
               description="First Aid, CPR and the rest. Each one unlocks services."
             >
@@ -117,6 +121,7 @@ export default async function CaregiverAccountPage() {
             </Section>
 
             <Section
+              id="checks"
               heading="Checks"
               description="GoSit verifies everyone who works with children and vulnerable adults."
             >
@@ -124,6 +129,7 @@ export default async function CaregiverAccountPage() {
             </Section>
 
             <Section
+              id="insurance"
               heading="Insurance"
               description="You maintain your own insurance as an independent caregiver — GoSit verifies it, and does not provide it."
             >
@@ -131,6 +137,7 @@ export default async function CaregiverAccountPage() {
             </Section>
 
             <Section
+              id="agreement"
               heading="Service agreement"
               description="Required before families can find you."
             >
@@ -149,16 +156,18 @@ export default async function CaregiverAccountPage() {
 }
 
 function Section({
+  id,
   heading,
   description,
   children,
 }: {
+  id: string;
   heading: string;
   description: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-border pt-8 first:border-0 first:pt-0">
+    <section id={id} className="scroll-mt-24 border-t border-border pt-8 first:border-0 first:pt-0">
       <h2 className="font-heading text-lg font-medium text-text-primary">{heading}</h2>
       <p className="mt-1 text-sm text-text-secondary">{description}</p>
       <div className="mt-4">{children}</div>

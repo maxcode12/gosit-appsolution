@@ -61,7 +61,7 @@ export function ListingStatus({
         ))}
       </ul>
 
-      <Link href="/caregiver/account" className={buttonClassName("primary", "mt-4")}>
+      <Link href="/caregiver/setup" className={buttonClassName("primary", "mt-4")}>
         Finish setting up
       </Link>
     </section>
