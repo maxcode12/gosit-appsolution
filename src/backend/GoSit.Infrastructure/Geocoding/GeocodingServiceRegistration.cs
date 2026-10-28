@@ -28,7 +28,25 @@ public static class GeocodingServiceRegistration
         var maps = configuration.GetSection(AzureMapsOptions.SectionName).Get<AzureMapsOptions>()
             ?? new AzureMapsOptions();
 
-        if (maps.IsConfigured)
+        services.AddOptions<GoogleMapsOptions>()
+            .Bind(configuration.GetSection(GoogleMapsOptions.SectionName))
+            .ValidateDataAnnotations();
+
+        var google = configuration.GetSection(GoogleMapsOptions.SectionName).Get<GoogleMapsOptions>()
+            ?? new GoogleMapsOptions();
+
+        if (google.IsConfigured)
+        {
+            // Google puts the key in the URL, so the client's own request logging — which
+            // prints the full URI at Information level — is removed for this client.
+            services.AddHttpClient<IGeocoder, GoogleMapsGeocoder>(client =>
+                {
+                    client.BaseAddress = new Uri(google.BaseUrl);
+                    client.Timeout = TimeSpan.FromSeconds(google.TimeoutSeconds);
+                })
+                .RemoveAllLoggers();
+        }
+        else if (maps.IsConfigured)
         {
             // A typed client, so the handler is pooled rather than a new socket per
             // save — this runs on every profile update.
