@@ -387,11 +387,11 @@ public sealed class CareBooking : Entity
     /// <summary>
     /// Closes a booking the caregiver checked into but never checked out of.
     ///
-    /// Once the check-in is older than <see cref="BookingPolicy.MaximumDuration"/> the
-    /// caregiver can no longer close it themselves — <see cref="CheckOut"/> refuses — so
-    /// without this the booking would sit in <see cref="BookingStatus.InProgress"/>
-    /// forever. Performed by the platform, so no actor is checked: there is no participant
-    /// left who is able to act.
+    /// Once <see cref="HasOverrun"/> is true the caregiver can no longer close it
+    /// themselves — <see cref="CheckOut"/> refuses on the same test — so without this the
+    /// booking would sit in <see cref="BookingStatus.InProgress"/> forever. Performed by
+    /// the platform, so no actor is checked: there is no participant left who is able
+    /// to act.
     /// </summary>
     public void AutoComplete(DateTime utcNow)
     {

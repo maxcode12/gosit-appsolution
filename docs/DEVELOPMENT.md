@@ -287,6 +287,22 @@ thing once. Unlike the booking notifications these name the certificate, the dat
 services lost — it is the caregiver's own credential and their own deadline, sent to them
 alone, and a summary would fail at the only job the notice has.
 
+#### Insurance
+
+Caregivers are independent marketplace providers who **maintain their own insurance**;
+GoSit does not insure them, and nothing in the code or in product copy may suggest
+otherwise (see `docs/BUSINESS_MODEL.md`). What is built is the record and its review:
+`CaregiverInsurancePolicy` — submit a policy, attach proof, staff approve or reject —
+mirroring `CaregiverCertification` exactly, down to `InsuranceExpirySweeper` raising the
+same 30-day and lapsed notices on the same six-hourly poll, for the same reason.
+
+What is **not** built is any insurance *requirement*. `CaregiverProfile.HasValidInsurance`
+exists and nothing consults it: neither `IsEligibleFor` nor `IsListable` checks coverage,
+so a caregiver can be fully listable with none on file. That is blocked on a
+coverage-per-service decision in `docs/BUSINESS_MODEL.md`, not on engineering — the
+coverage baseline discussed there is a planning assumption and must not appear anywhere
+user-facing until counsel and a broker confirm it.
+
 #### Screening follows the kind of care
 
 `VerificationRequirements.ClearanceFrom` turns a caregiver's valid checks into a clearance:
@@ -328,9 +344,11 @@ ids cannot be probed.
 
 Two states leave a booking stranded, because no participant is able to act on it any more:
 
-- a caregiver checks in and never checks out. Past the 14-hour `MaximumDuration`,
+- a caregiver checks in and never checks out. Once `CareBooking.HasOverrun` is true
   `CheckOut` refuses — a booking that long needs support, not a silent bill — so the
-  booking would sit in `InProgress` forever;
+  booking would sit in `InProgress` forever. Where that line falls depends on the pricing
+  unit, as above: fourteen hours after check-in for hourly care, a day after the scheduled
+  pick-up for a stay;
 - nobody answers a request before its start time, so it stays `Pending` and keeps
   appearing as actionable to both sides.
 
@@ -340,8 +358,9 @@ It is shaped like `OutboxPublisher`: a scope per unit of work, a loop that survi
 cycle, and logging that carries identifiers only.
 
 - **Overrunning** → `CareBooking.AutoComplete`. Completes the booking and bills the
-  **scheduled** `EndAtUtc`, not the elapsed time since check-in: the caregiver left at
-  some unrecorded point, and the requester must not pay for a forgotten check-out. Sets
+  **schedule**, not the elapsed time since check-in — the hours to `EndAtUtc` for hourly
+  care, the nights to the scheduled pick-up for a stay. The caregiver left at some
+  unrecorded point, and the requester must not pay for a forgotten check-out. Sets
   `WasAutoCompleted` and leaves `CheckedOutAtUtc` **null** — stamping a check-out time
   nobody gave would put invented evidence in a financial record. Raises
   `BookingCompletedDomainEvent`, so the dispute window opens as usual.
@@ -355,6 +374,13 @@ Each closure commits in its own transaction, writing its `AuditEvent`
 platform acted) and outbox message alongside the state change. A booking a participant
 changed in the meantime raises a `DomainException` or a concurrency conflict, is skipped,
 and is re-evaluated next cycle.
+
+Two paths now reach `Completed` — a caregiver checking out, and this sweep — so whatever
+completion is supposed to trigger lives in `BookingCompletionEffects`, which **both** call
+inside their own transaction before saving. Wiring an effect into only one of them makes
+the two silently different: a referral would qualify for the family whose caregiver
+remembered to check out and not for the family whose caregiver forgot. Anything that comes
+to depend on completion belongs there, not in either caller.
 
 ### Subscriptions and entitlements
 
