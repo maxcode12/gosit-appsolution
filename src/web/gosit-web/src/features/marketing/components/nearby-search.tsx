@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { buttonClassName } from "@/components/ui/button";
 import { ArrowRightIcon, PinIcon } from "@/components/ui/marketing-icons";
-import { MARKETING_ONLY, PUBLIC_API_BASE_URL, getStartedHref, type Audience } from "@/features/marketing/public-mode";
+import { PUBLIC_API_BASE_URL, getStartedHref, type Audience } from "@/features/marketing/public-mode";
 
 type Area = { code: string; name: string; province: string };
 type Overview = {
@@ -208,9 +208,7 @@ function Result({ overview, audience }: { overview: Overview; audience: Audience
   const withCare = overview.categories.filter((category) => category.count > 0);
 
   // In the full app, carry the place into sign-up so the first search is already theirs.
-  const href = MARKETING_ONLY
-    ? getStartedHref(audience)
-    : `${getStartedHref(audience)}&postalCode=${encodeURIComponent(area.code)}`;
+  const href = `${getStartedHref(audience)}&postalCode=${encodeURIComponent(area.code)}`;
 
   if (caregiverCount === 0) {
     return (

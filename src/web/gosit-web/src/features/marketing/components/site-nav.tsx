@@ -7,7 +7,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { CloseIcon, MenuIcon } from "@/components/ui/marketing-icons";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Wordmark } from "@/components/ui/wordmark";
-import { MARKETING_ONLY, getStartedHref } from "@/features/marketing/public-mode";
+import { getStartedHref, loginHref } from "@/features/marketing/public-mode";
 
 const LINKS = [
   { href: "/for-families", label: "For families" },
@@ -61,14 +61,12 @@ export function SiteNav() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {MARKETING_ONLY ? null : (
-              <Link
-                href="/login"
-                className="hidden rounded-full px-3.5 py-2 font-control text-sm font-semibold text-text-primary transition-colors hover:text-brand-primary sm:block"
-              >
-                Log in
-              </Link>
-            )}
+            <Link
+              href={loginHref()}
+              className="hidden rounded-full px-3.5 py-2 font-control text-sm font-semibold text-text-primary transition-colors hover:text-brand-primary sm:block"
+            >
+              Log in
+            </Link>
             <Link
               href={getStartedHref()}
               className={buttonClassName("primary", "!rounded-full max-sm:!hidden whitespace-nowrap", "md")}
@@ -106,11 +104,9 @@ export function SiteNav() {
               <Link href={getStartedHref()} className={buttonClassName("primary", "!rounded-full flex-1", "lg")}>
                 Get started
               </Link>
-              {MARKETING_ONLY ? null : (
-                <Link href="/login" className={buttonClassName("ghost", "!rounded-full flex-1", "lg")}>
-                  Log in
-                </Link>
-              )}
+              <Link href={loginHref()} className={buttonClassName("ghost", "!rounded-full flex-1", "lg")}>
+                Log in
+              </Link>
             </div>
           </nav>
         ) : null}

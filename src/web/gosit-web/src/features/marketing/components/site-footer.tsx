@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
-import { MARKETING_ONLY, getStartedHref } from "@/features/marketing/public-mode";
+import { getStartedHref, loginHref } from "@/features/marketing/public-mode";
 import { Container } from "@/features/marketing/components/section";
 
 /**
@@ -55,14 +55,10 @@ export function SiteFooter() {
             />
             <FooterColumn
               title="Account"
-              links={
-                MARKETING_ONLY
-                  ? [{ href: "/get-started", label: "Join the early list" }]
-                  : [
-                      { href: "/login", label: "Log in" },
-                      { href: "/signup", label: "Create an account" },
-                    ]
-              }
+              links={[
+                { href: loginHref(), label: "Log in" },
+                { href: getStartedHref(), label: "Create an account" },
+              ]}
             />
           </div>
         </div>
