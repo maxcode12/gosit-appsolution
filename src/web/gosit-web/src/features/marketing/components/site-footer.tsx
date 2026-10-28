@@ -51,6 +51,8 @@ export function SiteFooter() {
                 { href: "/safety", label: "Trust & safety" },
                 { href: "/faq", label: "FAQ" },
                 { href: "/contact", label: "Contact" },
+                { href: "/privacy", label: "Privacy policy" },
+                { href: "/terms", label: "Terms of service" },
               ]}
             />
             <FooterColumn

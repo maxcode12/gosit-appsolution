@@ -115,7 +115,7 @@ const SIGNED_OUT_PAGES = ["/login", "/forgot-password", "/reset-password", "/ver
 const SHARED_PATHS = ["/session", "/documents", "/recordings"];
 const MARKETING_PATHS = [
   "/about", "/contact", "/faq", "/for-caregivers", "/for-families",
-  "/get-started", "/how-it-works", "/safety", "/services",
+  "/get-started", "/how-it-works", "/privacy", "/safety", "/services", "/terms",
 ];
 
 function underPath(pathname: string, prefixes: readonly string[]): boolean {
