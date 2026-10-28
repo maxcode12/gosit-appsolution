@@ -21,6 +21,12 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(512);
 
+        // Google's stable id for the person. Filtered unique: most accounts have none.
+        builder.Property(u => u.GoogleSubject).HasMaxLength(64);
+        builder.HasIndex(u => u.GoogleSubject)
+            .IsUnique()
+            .HasFilter("\"GoogleSubject\" IS NOT NULL");
+
         builder.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
         builder.Property(u => u.LastName).IsRequired().HasMaxLength(100);
 

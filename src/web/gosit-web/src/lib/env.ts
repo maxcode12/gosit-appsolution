@@ -25,4 +25,11 @@ export const env = {
    * that says so.
    */
   stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? null,
+
+  /**
+   * The Google OAuth client ID for "Continue with Google". Public by design — it names
+   * the application to Google and is checked by the API against the token's audience.
+   * Unset turns the button off rather than showing one that cannot work.
+   */
+  googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || null,
 } as const;

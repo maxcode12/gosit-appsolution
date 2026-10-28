@@ -3,6 +3,7 @@ using GoSit.Application.Abstractions;
 using GoSit.Application.Common;
 using GoSit.Application.Features.Authentication;
 using GoSit.Application.Features.Authentication.GetCurrentUser;
+using GoSit.Application.Features.Authentication.GoogleSignIn;
 using GoSit.Application.Features.Authentication.Login;
 using GoSit.Application.Features.Authentication.Logout;
 using GoSit.Application.Features.Authentication.Refresh;
@@ -68,6 +69,29 @@ public sealed class AuthController(
         return Ok(result.Tokens);
     }
 
+    /// <summary>
+    /// Signs in or signs up with a Google ID token. Role is needed only for someone with
+    /// no account yet; without it the API answers 400 and the client asks which they are.
+    /// </summary>
+    [HttpPost("google")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthenticationTokens), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthenticationTokens>> GoogleSignIn(
+        [FromBody] GoogleSignInRequest request,
+        [FromServices] ICommandHandler<GoogleSignInCommand, GoogleSignInResponse> googleSignIn,
+        [FromServices] IValidator<GoogleSignInCommand> validator,
+        CancellationToken cancellationToken)
+    {
+        var command = new GoogleSignInCommand(request.IdToken, request.Role);
+
+        await validator.ValidateOrThrowAsync(command, cancellationToken);
+        var result = await googleSignIn.HandleAsync(command, cancellationToken);
+
+        return Ok(result.Tokens);
+    }
+
     [HttpPost("refresh")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(AuthenticationTokens), StatusCodes.Status200OK)]
@@ -113,6 +137,8 @@ public sealed record RegisterRequest(
     string FirstName,
     string LastName,
     UserRole Role);
+
+public sealed record GoogleSignInRequest(string IdToken, UserRole? Role);
 
 public sealed record LoginRequest(string Email, string Password);
 

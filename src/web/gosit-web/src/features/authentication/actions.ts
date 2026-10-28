@@ -185,6 +185,55 @@ export async function registerAction(
   redirect(destination === homePathFor("Caregiver") ? "/caregiver/setup" : destination);
 }
 
+export interface GoogleSignInResult {
+  /** True when this Google account has no GoSit account yet and must say which kind. */
+  needsRole?: boolean;
+  error?: string;
+}
+
+/**
+ * Signs in or signs up with the ID token Google handed the browser.
+ *
+ * The token is verified by the API, never here — this only relays it. A caregiver who has
+ * just been created lands on `/caregiver`, which sends anyone without a profile to the
+ * setup checklist.
+ */
+export async function googleSignInAction(
+  idToken: string,
+  role?: "CareRequester" | "Caregiver",
+): Promise<GoogleSignInResult> {
+  if (!idToken) {
+    return { error: "Google did not return a sign-in. Try again." };
+  }
+
+  const response = await fetch(`${env.apiBaseUrl}/api/v1/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken, role: role ?? null }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const problem = await readProblem(response);
+
+    if (response.status === 400 && problem.errors?.role) {
+      return { needsRole: true };
+    }
+
+    if (response.status === 403) {
+      return { error: problem.title ?? "Sign-up is not open yet." };
+    }
+
+    if (response.status === 429) {
+      return { error: "Too many attempts. Wait a minute and try again." };
+    }
+
+    return { error: "We could not sign you in with Google." };
+  }
+
+  redirect(await startSession(response));
+}
+
 export async function logoutAction(): Promise<void> {
   const refreshToken = await getRefreshToken();
 

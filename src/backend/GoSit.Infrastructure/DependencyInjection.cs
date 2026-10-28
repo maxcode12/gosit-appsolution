@@ -104,6 +104,9 @@ public static class DependencyInjection
             configuration.GetSection(AdministratorSeedOptions.SectionName));
         services.AddScoped<AdministratorSeeder>();
 
+        services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
+        services.AddSingleton<IGoogleIdTokenVerifier, GoogleIdTokenVerifier>();
+
         services.Configure<RegistrationOptions>(
             configuration.GetSection(RegistrationOptions.SectionName));
         services.AddSingleton<IRegistrationPolicy, ConfiguredRegistrationPolicy>();

@@ -95,6 +95,88 @@ public sealed class User : Entity
     }
 
     /// <summary>
+    /// Google's permanent identifier for this person (the <c>sub</c> claim), set when the
+    /// account is created through or linked to Google sign-in. Matched in preference to
+    /// the email address, because an email can change hands and a subject does not.
+    /// </summary>
+    public string? GoogleSubject { get; private set; }
+
+    /// <summary>True when this account has a password it can sign in with.</summary>
+    public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
+
+    /// <summary>
+    /// Creates an account for someone Google has already identified.
+    /// </summary>
+    /// <remarks>
+    /// No password: an empty hash can never verify, so the account signs in through
+    /// Google until the person sets one through the reset flow. The email is marked
+    /// verified because the caller only gets here for an address Google reports as
+    /// verified. Like <see cref="Register"/>, this cannot create staff accounts.
+    /// </remarks>
+    public static User RegisterWithGoogle(
+        string googleSubject,
+        string email,
+        string firstName,
+        string lastName,
+        UserRole role,
+        DateTime utcNow)
+    {
+        if (string.IsNullOrWhiteSpace(googleSubject))
+        {
+            throw new DomainException("A Google account identifier is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new DomainException("An email address is required.");
+        }
+
+        if (role is not (UserRole.CareRequester or UserRole.Caregiver))
+        {
+            throw new DomainException("Only care-requester and caregiver accounts can be self-registered.");
+        }
+
+        var user = new User
+        {
+            Email = email.Trim(),
+            NormalizedEmail = Normalize(email),
+            PasswordHash = string.Empty,
+            GoogleSubject = googleSubject,
+            // Google may return no family name; the profile screens collect a real one.
+            FirstName = string.IsNullOrWhiteSpace(firstName) ? email.Trim().Split('@')[0] : firstName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(lastName) ? "-" : lastName.Trim(),
+            Role = role,
+            Status = UserStatus.Active,
+            EmailVerified = true,
+            CreatedAtUtc = utcNow,
+        };
+
+        user.RaiseDomainEvent(new UserRegisteredDomainEvent(user.Id, role, utcNow));
+        return user;
+    }
+
+    /// <summary>
+    /// Ties an existing account to a Google identity. Refused if it is already tied to a
+    /// different one: repointing would let whoever controls the new Google account in.
+    /// Google only vouches for the email, so the address is treated as verified.
+    /// </summary>
+    public void LinkGoogle(string googleSubject)
+    {
+        if (string.IsNullOrWhiteSpace(googleSubject))
+        {
+            throw new DomainException("A Google account identifier is required.");
+        }
+
+        if (GoogleSubject is not null && GoogleSubject != googleSubject)
+        {
+            throw new DomainException("This account is already linked to a different Google account.");
+        }
+
+        GoogleSubject = googleSubject;
+        EmailVerified = true;
+    }
+
+    /// <summary>
     /// Provisions a staff account.
     /// </summary>
     /// <remarks>

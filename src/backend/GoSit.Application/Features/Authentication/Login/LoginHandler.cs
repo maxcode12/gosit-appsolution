@@ -31,6 +31,15 @@ public sealed class LoginHandler(
             throw new AuthenticationFailedException();
         }
 
+        // Created through Google and never given a password: nothing to check a password
+        // against. Answered like a wrong password, after the same cost, so the response
+        // does not reveal which sign-in method an address uses.
+        if (!user.HasPassword)
+        {
+            passwordHasher.Verify(command.Password, _decoyHash.Value, out _);
+            throw new AuthenticationFailedException();
+        }
+
         var utcNow = clock.UtcNow;
 
         /*

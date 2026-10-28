@@ -65,6 +65,16 @@ public sealed class UserRepository(GoSitDbContext context) : IUserRepository
             .AsNoTracking()
             .SingleOrDefaultAsync(u => u.ReferralCode == referralCode, cancellationToken);
 
+    public Task<User?> FindTrackedByGoogleSubjectAsync(string googleSubject, CancellationToken cancellationToken) =>
+        context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.GoogleSubject == googleSubject, cancellationToken);
+
+    public Task<User?> FindTrackedByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
+        context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
+
     public Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken) =>
         context.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
 

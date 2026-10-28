@@ -1,45 +1,154 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import { googleSignInAction } from "@/features/authentication/actions";
+import { env } from "@/lib/env";
 
 /**
- * Facebook / Apple / Google buttons from Figma 49:8 and 77:12.
+ * "Continue with Google", drawn by Google's own script so it follows their branding.
  *
- * Social sign-in is a "Should Have" in PLAN.md and no provider is wired up yet, so
- * the controls render in the designed position but are disabled and say so. Showing
- * them as live buttons that silently do nothing would be worse than showing them
- * as not-yet-available.
+ * The button hands back a signed ID token, which goes to the API to be verified. Someone
+ * with no GoSit account yet is asked whether they are a family or a caregiver and the
+ * same token is sent again — it stays valid long enough for that.
  *
- * Drawn as one quiet row, so a set of controls that do nothing yet takes up as little
- * of the form as possible.
+ * Renders nothing when no client ID is configured, rather than a button that cannot work.
+ * Facebook and Apple are not offered: neither is wired up, and a disabled button is noise.
  */
 
-const UNAVAILABLE = "Social sign-in is not available yet.";
+const SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
-const PROVIDERS: { icon: string; label: string; accessibleName?: string }[] = [
-  { icon: "/brand/facebook.png", label: "Facebook", accessibleName: "Continue with Facebook" },
-  { icon: "/brand/apple.png", label: "Apple" },
-  { icon: "/brand/google.png", label: "Google" },
-];
+interface GoogleIdentityApi {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: { credential?: string }) => void;
+      }) => void;
+      renderButton: (element: HTMLElement, options: Record<string, unknown>) => void;
+    };
+  };
+}
 
-export function SocialLoginGroup() {
+declare global {
+  interface Window {
+    google?: GoogleIdentityApi;
+  }
+}
+
+type Role = "CareRequester" | "Caregiver";
+
+export function SocialLoginGroup({ role }: { role?: Role }) {
+  const clientId = env.googleClientId;
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!clientId) return;
+
+    function render() {
+      const google = window.google;
+      if (!google || !buttonRef.current) return;
+
+      google.accounts.id.initialize({
+        client_id: clientId as string,
+        callback: ({ credential }) => {
+          if (!credential) {
+            setError("Google did not return a sign-in. Try again.");
+            return;
+          }
+
+          submit(credential, role);
+        },
+      });
+
+      google.accounts.id.renderButton(buttonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "pill",
+        width: 320,
+      });
+    }
+
+    if (window.google) {
+      render();
+      return;
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", render);
+      return () => existing.removeEventListener("load", render);
+    }
+
+    const script = document.createElement("script");
+    script.src = SCRIPT_SRC;
+    script.async = true;
+    script.addEventListener("load", render);
+    document.head.appendChild(script);
+
+  }, [clientId, role]);
+
+  function submit(idToken: string, chosenRole?: Role) {
+    setError(null);
+
+    startTransition(async () => {
+      const result = await googleSignInAction(idToken, chosenRole);
+
+      // A successful sign-in redirects, so anything returned here is a problem or a question.
+      if (result.needsRole) {
+        setPendingToken(idToken);
+        return;
+      }
+
+      if (result.error) {
+        setPendingToken(null);
+        setError(result.error);
+      }
+    });
+  }
+
+  if (!clientId) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-2.5">
-        {PROVIDERS.map((provider) => (
-          <button
-            key={provider.label}
-            type="button"
-            disabled
-            title={UNAVAILABLE}
-            aria-label={`${provider.accessibleName ?? provider.label} — ${UNAVAILABLE}`}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface font-control text-sm text-text-primary opacity-55 disabled:cursor-not-allowed"
-          >
-            <Image src={provider.icon} alt="" width={20} height={20} className="size-5 object-contain" />
-            <span className="max-sm:sr-only">{provider.label}</span>
-          </button>
-        ))}
-      </div>
+      {pendingToken ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+          <p className="font-control text-sm text-text-primary">
+            Welcome! Which describes you?
+          </p>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => submit(pendingToken, "CareRequester")}
+              className="h-11 rounded-xl border border-border bg-surface font-control text-sm text-text-primary hover:bg-surface-muted disabled:opacity-60"
+            >
+              I need care
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => submit(pendingToken, "Caregiver")}
+              className="h-11 rounded-xl border border-border bg-surface font-control text-sm text-text-primary hover:bg-surface-muted disabled:opacity-60"
+            >
+              I provide care
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div ref={buttonRef} className="flex min-h-11 justify-center" aria-busy={isPending} />
+      )}
 
-      <p className="text-center text-xs text-text-muted">Social sign-in is coming soon.</p>
+      {error ? (
+        <p role="alert" className="text-center text-sm text-danger-accent">
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex items-center gap-3" aria-hidden>
         <span className="h-px flex-1 bg-border" />

@@ -30,7 +30,7 @@ export default async function SignupPage({
           : "Sign up for free, no commitment"
       }
     >
-      <SocialLoginGroup />
+      <SocialLoginGroup role={accountType} />
       <div className="mt-6">
         {/* Carried from the landing page's search box, if that is where they came from. */}
         <SignupForm postalCode={raw} accountType={accountType} />

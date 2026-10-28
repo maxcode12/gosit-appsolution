@@ -37,6 +37,12 @@ public interface IUserRepository
         string tokenHash,
         CancellationToken cancellationToken);
 
+    /// <summary>Tracked lookup by Google's stable account identifier.</summary>
+    Task<User?> FindTrackedByGoogleSubjectAsync(string googleSubject, CancellationToken cancellationToken);
+
+    /// <summary>Tracked lookup by normalized email, for linking an existing account.</summary>
+    Task<User?> FindTrackedByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken);
+
     Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken);
 
     void Add(User user);
