@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\backend\GoSit.Application\GoSit.Application.csproj" />
     <ProjectReference Include="..\..\src\backend\GoSit.Domain\GoSit.Domain.csproj" />
+    <ProjectReference Include="..\..\src\backend\GoSit.Infrastructure\GoSit.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

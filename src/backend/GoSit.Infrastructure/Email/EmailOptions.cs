@@ -59,8 +59,12 @@ public sealed class EmailOptions
     /// this system can have. The original recipient is preserved in a header so a test
     /// can still tell who it was meant for.
     /// </summary>
+    /// <remarks>
+    /// Null, not empty, when unset: <c>[EmailAddress]</c> rejects an empty string, and an
+    /// unset option must not stop the sender being constructed at all.
+    /// </remarks>
     [EmailAddress]
-    public string RedirectAllTo { get; set; } = string.Empty;
+    public string? RedirectAllTo { get; set; }
 
     /// <summary>True when enough is configured to actually send.</summary>
     public bool IsConfigured =>
