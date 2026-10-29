@@ -1,0 +1,39 @@
+# Publishes the public website (www.gosits.com, Azure Static Web Apps `swa-gosit-web`)
+# whenever the web code changes on main. Needs one repository secret:
+#   AZURE_STATIC_WEB_APPS_API_TOKEN  (az staticwebapp secrets list -n swa-gosit-web -g rg-gosit-web)
+name: Deploy public site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/web/gosit-web/**"
+      - "scripts/build-marketing-site.mjs"
+      - ".github/workflows/deploy-public-site.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-public-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the static site
+        run: node scripts/build-marketing-site.mjs
+
+      - name: Upload to Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          skip_app_build: true
+          skip_api_build: true
+          app_location: .marketing-build/out
