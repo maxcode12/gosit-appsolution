@@ -26,7 +26,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         }
 
         httpContext.Response.StatusCode = problem.Status!.Value;
-        await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
+        // The runtime type, not ProblemDetails: serialising a ValidationProblemDetails as its
+        // base type silently drops `errors`, and clients (the Google sign-in asking which
+        // role, every form's field messages) read that field.
+        await httpContext.Response.WriteAsJsonAsync(problem, problem.GetType(), cancellationToken);
         return true;
     }
 
