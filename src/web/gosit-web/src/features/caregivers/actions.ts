@@ -121,6 +121,57 @@ export async function saveCaregiverProfileAction(
 }
 
 /**
+ * Creates the caregiver's profile from the two things it cannot exist without.
+ *
+ * Documents, checks, insurance, services and hours all hang off the profile, so until one
+ * exists none of them can be added. The full form also wants an address and a travel
+ * radius, which is more than someone who just signed up should have to produce before they
+ * can upload an ID. This saves the rate and years only; the radius takes the form's own
+ * default, and the address is added afterwards from the account page.
+ */
+export async function startCaregiverProfileAction(
+  _previous: CaregiverFormState,
+  formData: FormData,
+): Promise<CaregiverFormState> {
+  const hourlyRate = Number(text(formData, "hourlyRate"));
+  const yearsOfExperience = Number(text(formData, "yearsOfExperience"));
+
+  const fieldErrors: Record<string, string> = {};
+
+  if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) {
+    fieldErrors.hourlyRate = "Enter what you charge per hour.";
+  }
+  if (!Number.isInteger(yearsOfExperience) || yearsOfExperience < 0) {
+    fieldErrors.yearsOfExperience = "Enter a whole number of years, or 0.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { fieldErrors };
+  }
+
+  const input: UpsertCaregiverProfileInput = {
+    bio: null,
+    yearsOfExperience,
+    hourlyRate,
+    nightlyRate: null,
+    address: null,
+    serviceRadiusKm: 15,
+  };
+
+  try {
+    await apiFetch("/api/v1/caregivers/me", { method: "PUT", body: input });
+  } catch (error) {
+    return toState(error, "We could not save your profile.");
+  }
+
+  revalidateCaregiver();
+  revalidatePath("/caregiver/setup");
+  revalidatePath("/caregiver/documents");
+
+  return { saved: true };
+}
+
+/**
  * Replaces the services offered.
  *
  * The API takes the whole set, so an unchecked box is a removal — which is why the form

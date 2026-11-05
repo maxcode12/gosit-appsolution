@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getMyCaregiverProfile, getMyVerifications } from "@/features/caregivers/api";
 import { CertificationsPanel } from "@/features/caregivers/components/certifications-panel";
 import { DocumentCard } from "@/features/caregivers/components/document-card";
 import { InsurancePanel } from "@/features/caregivers/components/insurance-panel";
 import { OpenCardFromLink } from "@/features/caregivers/components/open-card-from-link";
+import { StartProfileForm } from "@/features/caregivers/components/start-profile-form";
 import { ServiceAgreementPanel } from "@/features/caregivers/components/service-agreement-panel";
 import { VerificationPanel } from "@/features/caregivers/components/verification-panel";
 import { buildDocuments, needsAttention } from "@/features/caregivers/documents";
@@ -37,13 +37,9 @@ export default async function CaregiverDocumentsPage() {
         heading="Documents"
         description="Your required and optional documents."
       >
-        <p className="max-w-2xl text-sm text-text-secondary">
-          Save your profile first, then you can add your documents.{" "}
-          <Link href="/caregiver/account" className="text-brand-primary underline">
-            Go to your account
-          </Link>
-          .
-        </p>
+        <div className="max-w-2xl">
+          <StartProfileForm />
+        </div>
       </DashboardShell>
     );
   }

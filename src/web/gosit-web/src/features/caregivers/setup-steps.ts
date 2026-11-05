@@ -40,7 +40,7 @@ export function buildSetupSteps(
     kind: "listing",
     state: profile?.address && profile.hourlyRate > 0 ? "done" : "todo",
     href: "/caregiver/account#about",
-    action: "Add profile",
+    action: profile && !profile.address ? "Add your address" : "Add profile",
   };
 
   if (!profile) {
@@ -159,11 +159,11 @@ function lockedSteps(): SetupStep[] {
   const locked = (id: string, title: string, kind: StepKind): SetupStep => ({
     id,
     title,
-    detail: "Available once your profile is saved.",
+    detail: "Opens up as soon as you start your profile above.",
     kind,
     state: "todo",
-    href: "/caregiver/account#about",
-    action: "Save profile first",
+    href: "#start-profile",
+    action: "Start your profile",
   });
 
   return [

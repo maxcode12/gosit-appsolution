@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getMyCaregiverProfile, getMyVerifications, getPayoutAccount } from "@/features/caregivers/api";
 import { SetupChecklist } from "@/features/caregivers/components/setup-checklist";
+import { StartProfileForm } from "@/features/caregivers/components/start-profile-form";
 import { caregiverNav } from "@/features/caregivers/nav";
 import { buildSetupSteps } from "@/features/caregivers/setup-steps";
 
@@ -28,7 +29,8 @@ export default async function CaregiverSetupPage() {
       heading="Finish setting up"
       description="Your details, checks, insurance and payout account."
     >
-      <div className="max-w-2xl">
+      <div className="flex max-w-2xl flex-col gap-6">
+        {profile ? null : <StartProfileForm />}
         <SetupChecklist
           steps={buildSetupSteps(profile, verifications, payout)}
           isListable={profile?.isListable ?? false}
