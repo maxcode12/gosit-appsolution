@@ -72,8 +72,9 @@ export function ListingStatus({
  * Restates the domain's listing rule in the caregiver's own words.
  *
  * Kept deliberately in step with `CaregiverProfile.IsListable`: accepting work, verified,
- * an address, at least one availability window, a rate above zero, and a current
- * signature on the Caregiver Service Agreement.
+ * an address, at least one availability window, a rate above zero, a current signature on
+ * the Caregiver Service Agreement, and a verified, in-date liability policy (the last is
+ * enforced by search and booking, and reflected in `profile.isListable`).
  */
 function listingBlockers(
   profile: CaregiverProfile,
@@ -102,6 +103,21 @@ function listingBlockers(
       missing.length > 0
         ? `Start your ${missing.map((check) => CHECK_LABELS[check].toLowerCase()).join(" and ")}.`
         : "Your checks are with our team. We will email you when they are done.",
+    );
+  }
+
+  // The same rule as the server's: a verified, in-date liability policy.
+  const liability = profile.insurancePolicies.filter(
+    (p) => p.coverageType === "GeneralLiability" || p.coverageType === "ProfessionalLiability",
+  );
+
+  if (!liability.some((p) => p.isValid)) {
+    blockers.push(
+      liability.some((p) => p.status === "Pending")
+        ? "Your insurance is with our team. We will email you when it is verified."
+        : liability.length > 0
+          ? "Upload a current liability insurance policy. The one on file has not been accepted or has expired."
+          : "Add your liability insurance and upload proof. You carry your own cover, and our team verifies it.",
     );
   }
 

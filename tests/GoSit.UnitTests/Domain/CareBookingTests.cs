@@ -30,6 +30,21 @@ public class CareBookingTests
     private static Address SomeAddress() =>
         Address.Create("12 Bloor St W", null, "Toronto", "ON", "M5S 1M2");
 
+    /// <summary>A verified liability policy that covers every date these tests book.</summary>
+    private static void AddInsurance(CaregiverProfile profile)
+    {
+        var policy = profile.SubmitInsurance(
+            InsuranceCoverageType.GeneralLiability,
+            "Aviva Canada",
+            "POL-12345",
+            2_000_000m,
+            new DateOnly(2020, 1, 1),
+            new DateOnly(2099, 1, 1),
+            Now);
+        profile.AttachInsuranceDocument(policy.Id, "test/policy.pdf", Now);
+        profile.ApproveInsurance(policy.Id, Now);
+    }
+
     /// <summary>A caregiver who is verified, listed, qualified and available all day.</summary>
     private static CaregiverProfile BookableCaregiver(CareService? service = null)
     {
@@ -49,6 +64,7 @@ public class CareBookingTests
 
         profile.MarkVerified(clearedForPeopleCare: true, Now);
         profile.AcceptServiceAgreement("Test Caregiver", Now);
+        AddInsurance(profile);
         profile.SetAcceptingWork(true, Now);
         return profile;
     }
@@ -140,10 +156,30 @@ public class CareBookingTests
             [new AvailabilityWindow(DayOfWeek.Wednesday, new TimeOnly(6, 0), new TimeOnly(23, 0))], Now);
         caregiver.MarkVerified(clearedForPeopleCare: true, Now);
         caregiver.AcceptServiceAgreement("Test Caregiver", Now);
+        AddInsurance(caregiver);
         caregiver.SetAcceptingWork(true, Now);
 
-        // Listed and available, but never certified.
+        // Listed, insured and available, but never certified.
         Assert.Throws<DomainException>(() => Book(caregiver, service));
+    }
+
+    [Fact]
+    public void A_caregiver_with_no_verified_insurance_cannot_be_booked()
+    {
+        var service = Babysitting();
+        var caregiver = BookableCaregiver(service);
+        var uninsured = CaregiverProfile.Create(Guid.NewGuid(), 30m, 5, Now);
+        uninsured.SetServiceArea(SomeAddress(), 25, Now);
+        uninsured.ReplaceServices([service], Now);
+        uninsured.ReplaceAvailability(
+            [new AvailabilityWindow(DayOfWeek.Wednesday, new TimeOnly(6, 0), new TimeOnly(23, 0))], Now);
+        uninsured.MarkVerified(clearedForPeopleCare: true, Now);
+        uninsured.AcceptServiceAgreement("Test Caregiver", Now);
+        uninsured.SetAcceptingWork(true, Now);
+
+        // Same booking that succeeds for the insured caregiver.
+        Assert.NotNull(Book(caregiver, service));
+        Assert.Throws<DomainException>(() => Book(uninsured, service));
     }
 
     [Fact]

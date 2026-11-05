@@ -9,16 +9,31 @@ namespace GoSit.Infrastructure.Persistence.Repositories;
 public sealed class CaregiverSearchRepository(GoSitDbContext context) : ICaregiverSearchRepository
 {
     /// <summary>
-    /// Caregivers eligible to appear in search at all: verified, accepting work, and
-    /// with a location on file. Applied before every other filter so an unverified
-    /// caregiver can never reach a result set by any route.
+    /// Caregivers eligible to appear in search at all: verified, accepting work, with a
+    /// location on file, and holding a verified, unexpired liability policy (see
+    /// <see cref="CaregiverProfile.HasRequiredInsurance"/>, which this mirrors in SQL).
+    /// Applied before every other filter so an unverified caregiver can never reach a
+    /// result set by any route.
     /// </summary>
-    private IQueryable<CaregiverProfile> ListableCaregivers =>
-        context.CaregiverProfiles
-            .AsNoTracking()
-            .Where(p => p.VerificationStatus == VerificationStatus.Verified)
-            .Where(p => p.AcceptingWork)
-            .Where(p => p.Address != null);
+    private IQueryable<CaregiverProfile> ListableCaregivers
+    {
+        get
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            return context.CaregiverProfiles
+                .AsNoTracking()
+                .Where(p => p.VerificationStatus == VerificationStatus.Verified)
+                .Where(p => p.AcceptingWork)
+                .Where(p => p.Address != null)
+                .Where(p => p.InsurancePolicies.Any(i =>
+                    i.Status == InsuranceVerificationStatus.Verified
+                    && i.EffectiveOn <= today
+                    && i.ExpiresOn >= today
+                    && (i.CoverageType == InsuranceCoverageType.GeneralLiability
+                        || i.CoverageType == InsuranceCoverageType.ProfessionalLiability)));
+        }
+    }
 
     public async Task<IReadOnlyList<CaregiverProfile>> FindCandidatesAsync(
         CaregiverSearchFilter filter,

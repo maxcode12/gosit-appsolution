@@ -75,6 +75,7 @@ public sealed class BookingRepository(GoSitDbContext context) : IBookingReposito
         context.CaregiverProfiles
             .Include(p => p.Availability)
             .Include(p => p.Services)
+            .Include(p => p.InsurancePolicies)
             .Include(p => p.Certifications)
             .ThenInclude(c => c.Certification)
             .SingleOrDefaultAsync(p => p.Id == caregiverProfileId, cancellationToken);

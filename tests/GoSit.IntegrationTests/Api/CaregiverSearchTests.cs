@@ -84,6 +84,22 @@ public class CaregiverSearchTests(GoSitApiFactory factory)
     }
 
     /// <summary>
+    /// Insurance is required to be listed: a caregiver who is otherwise ready, but has no
+    /// verified liability policy, never surfaces.
+    /// </summary>
+    [Fact]
+    public async Task A_caregiver_with_no_verified_insurance_is_never_returned()
+    {
+        var uninsured = await factory.CreateListableCaregiverAsync(
+            serviceCodes: ["BABYSITTING"], certificationCodes: ["VULNERABLE_SECTOR"], insured: false);
+        var client = await RequesterAsync();
+
+        var results = await SearchEveryPageAsync(client);
+
+        Assert.DoesNotContain(results, r => r.CaregiverProfileId == uninsured);
+    }
+
+    /// <summary>
     /// An unverified caregiver must never surface, however complete their profile.
     /// </summary>
     [Fact]

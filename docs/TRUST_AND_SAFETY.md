@@ -35,10 +35,11 @@ From `docs/PLAN.md` Phase 7 and the current domain model:
 - **Caregiver insurance verification.** `CaregiverInsurancePolicy` mirrors
   `CaregiverCertification` exactly: submit, upload proof, staff approve/reject (approval
   requires a document), 30-day and lapsed expiry notices via `InsuranceExpirySweeper`.
-  Routes under `/api/v1/caregivers/me/insurance` and `/api/v1/admin/insurance`. **Not**
-  wired into `IsEligibleFor` or `IsListable` — a caregiver can be fully listable with no
-  insurance on file, because which services require which coverage, at what limit, is
-  still an open decision (see "Open product questions" below), not an engineering gap.
+  Routes under `/api/v1/caregivers/me/insurance` and `/api/v1/admin/insurance`.
+  **Required to be listed or booked**: `CaregiverProfile.HasRequiredInsurance` — a
+  verified, unexpired general or professional liability policy — is enforced in search and
+  in `CareBooking`. Which services need which *additional* coverage, and at what limit,
+  is still an open decision (see "Open product questions" below), not an engineering gap.
 
 Everything below this line is the target model layered on top of that foundation.
 
@@ -198,8 +199,8 @@ A caregiver cannot receive or accept a booking unless:
 
 Never rely on frontend checks for any of the above. Today's `IsEligibleFor` already
 enforces the subset of this that exists (verification status, certifications, service
-match); the insurance and reference conditions are additions for when those features
-exist.
+match), and search and booking also require a verified liability policy; the reference
+conditions are additions for when that feature exists.
 
 ## Continuous trust, not a one-time check
 

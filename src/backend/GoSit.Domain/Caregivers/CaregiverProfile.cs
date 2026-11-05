@@ -520,12 +520,23 @@ public sealed class CaregiverProfile : Entity
 
     /// <summary>
     /// Whether this caregiver currently holds a verified, unexpired policy of the given
-    /// coverage type. Not yet wired into booking eligibility — see
-    /// docs/TRUST_AND_SAFETY.md for why: which services require which coverage, and at
-    /// what limit, is an open insurance decision, not a built rule.
+    /// coverage type. Per-service and per-limit requirements are still an open insurance
+    /// decision (docs/TRUST_AND_SAFETY.md); the one rule that is built is
+    /// <see cref="HasRequiredInsurance"/>.
     /// </summary>
     public bool HasValidInsurance(InsuranceCoverageType coverageType, DateOnly date) =>
         _insurancePolicies.Any(p => p.CoverageType == coverageType && p.IsValidOn(date));
+
+    /// <summary>
+    /// The insurance every caregiver must hold to be listed or booked: a verified,
+    /// unexpired liability policy of their own. Automobile or "other" cover alone does not
+    /// satisfy it. GoSit verifies the policy; it does not provide or underwrite it, and the
+    /// liability limit is deliberately not checked here — that figure is still to be
+    /// settled with counsel and a broker.
+    /// </summary>
+    public bool HasRequiredInsurance(DateOnly date) =>
+        HasValidInsurance(InsuranceCoverageType.GeneralLiability, date)
+        || HasValidInsurance(InsuranceCoverageType.ProfessionalLiability, date);
 
     private CaregiverInsurancePolicy RequireInsurancePolicy(Guid caregiverInsurancePolicyId) =>
         _insurancePolicies.SingleOrDefault(p => p.Id == caregiverInsurancePolicyId)

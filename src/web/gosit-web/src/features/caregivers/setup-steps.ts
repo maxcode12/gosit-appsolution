@@ -64,11 +64,14 @@ export function buildSetupSteps(
         : missingChecks.length === 0
           ? "review"
           : "todo",
-    href: "/caregiver/account#checks",
+    href: "/caregiver/documents#checks",
     action: "Start checks",
   };
 
   const anyPending = (items: { status: string }[]) => items.some((i) => i.status === "Pending");
+  const liabilityPolicies = profile.insurancePolicies.filter(
+    (p) => p.coverageType === "GeneralLiability" || p.coverageType === "ProfessionalLiability",
+  );
 
   const certifications: SetupStep = {
     id: "certifications",
@@ -80,7 +83,7 @@ export function buildSetupSteps(
       : anyPending(profile.certifications)
         ? "review"
         : "todo",
-    href: "/caregiver/account#certifications",
+    href: "/caregiver/documents#certificates",
     action: "Add certificates",
   };
 
@@ -88,14 +91,15 @@ export function buildSetupSteps(
     id: "insurance",
     title: "Your insurance",
     detail:
-      "You carry your own cover as an independent caregiver. Upload your policy and our team will verify it.",
-    kind: "recommended",
-    state: profile.insurancePolicies.some((p) => p.isValid)
+      "You carry your own liability cover as an independent caregiver. Upload your policy and our team will verify it. Required before families can find you.",
+    kind: "listing",
+    // Mirrors the server: only a liability policy counts as the required cover.
+    state: liabilityPolicies.some((p) => p.isValid)
       ? "done"
-      : anyPending(profile.insurancePolicies)
+      : anyPending(liabilityPolicies)
         ? "review"
         : "todo",
-    href: "/caregiver/account#insurance",
+    href: "/caregiver/documents#insurance",
     action: "Add insurance",
   };
 
@@ -105,7 +109,7 @@ export function buildSetupSteps(
     detail: "Read and sign. Required before families can find you.",
     kind: "listing",
     state: profile.hasAcceptedCurrentAgreement ? "done" : "todo",
-    href: "/caregiver/account#agreement",
+    href: "/caregiver/documents#agreement",
     action: profile.agreementAcceptedVersion ? "Sign again" : "Read and sign",
   };
 
@@ -167,7 +171,7 @@ function lockedSteps(): SetupStep[] {
     locked("availability", "When you are free", "listing"),
     locked("checks", "Identity and background checks", "listing"),
     locked("certifications", "Certifications", "recommended"),
-    locked("insurance", "Your insurance", "recommended"),
+    locked("insurance", "Your insurance", "listing"),
     locked("agreement", "Caregiver Service Agreement", "listing"),
     locked("payouts", "Get paid", "paid"),
   ];

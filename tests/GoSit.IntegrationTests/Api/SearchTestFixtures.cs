@@ -78,7 +78,8 @@ public static class SearchTestFixtures
         decimal? rating = null,
         int reviewCount = 0,
         double? latitude = null,
-        double? longitude = null)
+        double? longitude = null,
+        bool insured = true)
     {
         var client = await factory.RegisterCaregiverAsync();
 
@@ -133,7 +134,7 @@ public static class SearchTestFixtures
         availabilityResponse.EnsureSuccessStatusCode();
 
         await factory.MakeListableAsync(
-            profile!.Id, certificationCodes ?? [], rating, reviewCount, latitude, longitude);
+            profile!.Id, certificationCodes ?? [], rating, reviewCount, latitude, longitude, insured);
 
         return profile.Id;
     }
@@ -149,7 +150,8 @@ public static class SearchTestFixtures
         decimal? rating,
         int reviewCount,
         double? latitude,
-        double? longitude)
+        double? longitude,
+        bool insured)
     {
         using var scope = factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<GoSitDbContext>();
@@ -167,6 +169,13 @@ public static class SearchTestFixtures
         {
             profile.AttachCertificationDocument(certification.Id, "test/document", utcNow);
             profile.ApproveCertification(certification.Id, utcNow);
+        }
+
+        // A verified liability policy is required to be listed — see
+        // CaregiverProfile.HasRequiredInsurance.
+        if (insured)
+        {
+            profile.GiveVerifiedInsurance(utcNow);
         }
 
         profile.MarkVerified(clearedForPeopleCare: true, utcNow);

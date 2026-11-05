@@ -324,10 +324,12 @@ or code comments.
   anywhere user-facing.
 - **Built**: `CaregiverInsurancePolicy` (submit, upload proof, staff approve/reject,
   30-day and lapsed expiry notices — mirrors `CaregiverCertification` exactly).
-  **Not yet built**: any per-service insurance *requirement*. `CaregiverProfile.IsEligibleFor`
-  and `IsListable` do not check insurance today; a caregiver can be fully listable with no
-  insurance on file. Wiring that in is blocked on the coverage-per-service decision in
-  `docs/BUSINESS_MODEL.md`, not on engineering.
+  **Required (decided)**: every caregiver must hold a verified, in-date liability policy
+  (general or professional; automobile or "other" alone does not count) to appear in
+  search or be booked — `CaregiverProfile.HasRequiredInsurance`, enforced in the search
+  query and in `CareBooking`. **Not yet built**: any per-service coverage type or
+  liability *limit* — those stay open in `docs/BUSINESS_MODEL.md`, and no limit figure may
+  appear user-facing until counsel and a broker confirm it.
 - The verification workflow, statuses, and expiry handling are in
   `docs/TRUST_AND_SAFETY.md`.
 

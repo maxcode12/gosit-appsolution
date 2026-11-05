@@ -1,6 +1,7 @@
 import {
   CalendarIcon,
   ChartIcon,
+  DocumentIcon,
   InboxIcon,
   PersonIcon,
   StarIcon,
@@ -23,5 +24,6 @@ export const caregiverNav: NavItem[] = [
   { href: "/caregiver/reviews", label: "Reviews", icon: <StarIcon /> },
   { href: "/caregiver/insights", label: "Insights", icon: <TrendIcon /> },
   { href: "/caregiver/earnings", label: "Earnings", icon: <WalletIcon /> },
+  { href: "/caregiver/documents", label: "Documents", icon: <DocumentIcon /> },
   { href: "/caregiver/account", label: "Account", icon: <PersonIcon /> },
 ];

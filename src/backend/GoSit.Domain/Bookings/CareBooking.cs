@@ -792,6 +792,13 @@ public sealed class CareBooking : Entity
             throw new DomainException("This caregiver is not currently accepting bookings.");
         }
 
+        // A lapsed policy takes a caregiver out of bookings the day it expires, even for a
+        // booking already requested; the date is the booking's, not today's.
+        if (!caregiver.HasRequiredInsurance(DateOnly.FromDateTime(startAtUtc)))
+        {
+            throw new DomainException("This caregiver is not currently accepting bookings.");
+        }
+
         // Offering a service is a claim; holding the certifications is what qualifies.
         if (!caregiver.IsEligibleFor(service, DateOnly.FromDateTime(startAtUtc)))
         {

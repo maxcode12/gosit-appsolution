@@ -75,6 +75,7 @@ public class CaregiverAcceptingWorkTests(GoSitApiFactory factory)
 
         var profile = await context.CaregiverProfiles.SingleAsync(p => p.Id == caregiverProfileId);
         profile.MarkVerified(clearedForPeopleCare: true, DateTime.UtcNow);
+        profile.GiveVerifiedInsurance(DateTime.UtcNow);
 
         await context.SaveChangesAsync();
     }

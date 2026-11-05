@@ -75,7 +75,7 @@ public static class CaregiverMapping
             profile.VerificationStatus.ToString(),
             profile.AcceptingWork,
             profile.AvailableForLastMinuteRequests,
-            profile.IsListable,
+            profile.IsListable && profile.HasRequiredInsurance(today),
             profile.Availability
                 .OrderBy(s => s.Day)
                 .ThenBy(s => s.StartTime)

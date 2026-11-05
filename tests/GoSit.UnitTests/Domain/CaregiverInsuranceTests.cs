@@ -50,6 +50,54 @@ public class CaregiverInsuranceTests
         Assert.True(profile.HasValidInsurance(InsuranceCoverageType.GeneralLiability, DateOnly.FromDateTime(Now)));
     }
 
+    private static void Approve(CaregiverProfile profile, InsuranceCoverageType type)
+    {
+        var policy = profile.SubmitInsurance(
+            type, "Aviva Canada", "POL-1", 2_000_000m,
+            new DateOnly(2026, 1, 1), new DateOnly(2027, 1, 1), Now);
+        profile.AttachInsuranceDocument(policy.Id, "2026/08/policy.pdf", Now);
+        profile.ApproveInsurance(policy.Id, Now);
+    }
+
+    [Theory]
+    [InlineData(InsuranceCoverageType.GeneralLiability)]
+    [InlineData(InsuranceCoverageType.ProfessionalLiability)]
+    public void A_verified_liability_policy_satisfies_the_required_insurance(InsuranceCoverageType type)
+    {
+        var profile = CreateProfile();
+
+        Approve(profile, type);
+
+        Assert.True(profile.HasRequiredInsurance(DateOnly.FromDateTime(Now)));
+    }
+
+    [Theory]
+    [InlineData(InsuranceCoverageType.Automobile)]
+    [InlineData(InsuranceCoverageType.Other)]
+    public void Other_cover_alone_does_not_satisfy_the_required_insurance(InsuranceCoverageType type)
+    {
+        var profile = CreateProfile();
+
+        Approve(profile, type);
+
+        Assert.False(profile.HasRequiredInsurance(DateOnly.FromDateTime(Now)));
+    }
+
+    [Fact]
+    public void An_unverified_or_expired_policy_does_not_satisfy_the_required_insurance()
+    {
+        var profile = CreateProfile();
+        Assert.False(profile.HasRequiredInsurance(DateOnly.FromDateTime(Now)));
+
+        Submit(profile);
+        Assert.False(profile.HasRequiredInsurance(DateOnly.FromDateTime(Now)));
+
+        var approved = CreateProfile();
+        Approve(approved, InsuranceCoverageType.GeneralLiability);
+        Assert.True(approved.HasRequiredInsurance(new DateOnly(2027, 1, 1)));
+        Assert.False(approved.HasRequiredInsurance(new DateOnly(2027, 1, 2)));
+    }
+
     [Fact]
     public void A_policy_without_a_document_can_still_be_rejected()
     {

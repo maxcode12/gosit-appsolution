@@ -296,12 +296,19 @@ otherwise (see `docs/BUSINESS_MODEL.md`). What is built is the record and its re
 mirroring `CaregiverCertification` exactly, down to `InsuranceExpirySweeper` raising the
 same 30-day and lapsed notices on the same six-hourly poll, for the same reason.
 
-What is **not** built is any insurance *requirement*. `CaregiverProfile.HasValidInsurance`
-exists and nothing consults it: neither `IsEligibleFor` nor `IsListable` checks coverage,
-so a caregiver can be fully listable with none on file. That is blocked on a
-coverage-per-service decision in `docs/BUSINESS_MODEL.md`, not on engineering — the
-coverage baseline discussed there is a planning assumption and must not appear anywhere
-user-facing until counsel and a broker confirm it.
+Insurance is **required** to be listed or booked: `CaregiverProfile.HasRequiredInsurance`
+asks for a verified, unexpired *liability* policy (general or professional; automobile or
+"other" alone does not satisfy it). It is enforced in two places that must stay in step —
+the SQL predicate in `CaregiverSearchRepository.ListableCaregivers` and
+`CareBooking.EnsureCaregiverCanBeBooked`, which checks against the booking's own date, so
+a policy lapsing before a booking blocks it. `CaregiverProfileResponse.IsListable` includes
+it, and the booking load (`FindCaregiverForBookingAsync`) must `Include` the policies.
+`CaregiverProfile.IsListable` itself is deliberately unchanged: it has no date to judge
+expiry against.
+
+What is **not** built is a per-service coverage type or a liability *limit* — both still
+open in `docs/BUSINESS_MODEL.md`. The coverage baseline discussed there is a planning
+assumption and must not appear anywhere user-facing until counsel and a broker confirm it.
 
 #### Screening follows the kind of care
 
