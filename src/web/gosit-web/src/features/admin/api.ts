@@ -12,6 +12,7 @@ import type {
   PendingInsurance,
   PendingVerification,
   ReportedReview,
+  StaffMember,
 } from "@/features/admin/types";
 
 /**
@@ -72,4 +73,23 @@ export function listReportedReviews(): Promise<ReportedReview[]> {
 /** Interviews with a recording, newest first. Not a queue: nothing here waits on staff. */
 export function listRecordedInterviews(): Promise<AdminInterview[]> {
   return queue<AdminInterview>("/api/v1/admin/interviews");
+}
+
+/** Whether the signed-in staff member can add other staff. False on any refusal. */
+export async function isSuperAdmin(): Promise<boolean> {
+  try {
+    const me = await apiFetch<{ isSuperAdmin: boolean }>("/api/v1/admin/staff/me");
+
+    return me.isSuperAdmin;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+export function listStaff(): Promise<StaffMember[]> {
+  return queue<StaffMember>("/api/v1/admin/staff");
 }

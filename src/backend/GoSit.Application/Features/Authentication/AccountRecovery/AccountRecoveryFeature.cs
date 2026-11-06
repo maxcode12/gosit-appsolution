@@ -67,6 +67,12 @@ public static class RecoveryTokenLifetimes
     /// which a forwarded or intercepted email is dangerous should be small.
     /// </summary>
     public static readonly TimeSpan PasswordReset = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// A staff invitation: longer than a reset, because a new colleague may not open it
+    /// today, and the account is unusable until they do (nobody knows its password).
+    /// </summary>
+    public static readonly TimeSpan StaffInvitation = TimeSpan.FromDays(3);
 }
 
 public sealed class RequestEmailVerificationHandler(
@@ -272,6 +278,10 @@ public interface IAccountRecoveryNotifier
 
     Task SendPasswordResetAsync(
         string email, string firstName, string token, CancellationToken cancellationToken);
+
+    /// <summary>Welcomes a new staff member and lets them choose their own password.</summary>
+    Task SendStaffInvitationAsync(
+        string email, string firstName, string invitedBy, string token, CancellationToken cancellationToken);
 
     /// <summary>Tells someone their password changed. Their warning if it was not them.</summary>
     Task SendPasswordChangedAsync(

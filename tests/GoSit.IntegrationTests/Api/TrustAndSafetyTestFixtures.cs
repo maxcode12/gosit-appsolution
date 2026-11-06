@@ -17,7 +17,9 @@ public static class TrustAndSafetyTestFixtures
     /// test promotes a freshly registered account directly in the database. That mirrors
     /// how staff are actually provisioned: out of band, never through the public API.
     /// </summary>
-    public static async Task<HttpClient> RegisterAdminAsync(this GoSitApiFactory factory)
+    public static async Task<HttpClient> RegisterAdminAsync(
+        this GoSitApiFactory factory,
+        bool superAdmin = false)
     {
         var email = $"admin-{Guid.NewGuid():N}@example.com";
         var client = factory.CreateClient();
@@ -39,7 +41,9 @@ public static class TrustAndSafetyTestFixtures
 
             await context.Users
                 .Where(u => u.Email == email)
-                .ExecuteUpdateAsync(s => s.SetProperty(u => u.Role, UserRole.Admin));
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.Role, UserRole.Admin)
+                    .SetProperty(u => u.IsSuperAdmin, superAdmin));
         }
 
         // Re-authenticate so the token carries the Admin role claim.

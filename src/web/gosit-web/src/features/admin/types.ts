@@ -285,3 +285,14 @@ export interface AdminEnquiry {
   createdAtUtc: string;
   handledAtUtc: string | null;
 }
+
+/** A staff account, as a super administrator sees it. */
+export interface StaffMember {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isSuperAdmin: boolean;
+  status: string;
+  createdAtUtc: string;
+}

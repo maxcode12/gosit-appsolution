@@ -13,6 +13,9 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, IDateTimeProvi
 {
     private const int RefreshTokenBytes = 32;
 
+    /// <summary>The claim the SuperAdminOnly policy checks.</summary>
+    public const string SuperAdminClaim = "super_admin";
+
     private readonly JwtOptions _options = options.Value;
 
     public TimeSpan RefreshTokenLifetime => TimeSpan.FromDays(_options.RefreshTokenDays);
@@ -30,6 +33,13 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, IDateTimeProvi
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.Role, user.Role.ToString()),
         };
+
+        // A flag, not personal data. Lives as long as the access token (minutes), so
+        // removing someone's super-admin standing takes effect at their next refresh.
+        if (user.IsSuperAdmin)
+        {
+            claims.Add(new Claim(SuperAdminClaim, "true"));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
 

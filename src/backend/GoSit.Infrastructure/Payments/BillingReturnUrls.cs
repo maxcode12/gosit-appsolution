@@ -14,6 +14,12 @@ public sealed class WebAppOptions
     /// once Stripe keys are supplied.
     /// </summary>
     public string BaseUrl { get; set; } = "http://localhost:3000";
+
+    /// <summary>
+    /// Where staff sign in, without a trailing slash, for the welcome email. Blank leaves the
+    /// address out of the email.
+    /// </summary>
+    public string AdminBaseUrl { get; set; } = string.Empty;
 }
 
 /// <summary>

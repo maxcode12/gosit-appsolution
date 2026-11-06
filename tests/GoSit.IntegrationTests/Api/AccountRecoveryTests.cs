@@ -22,6 +22,15 @@ public sealed class RecordingRecoveryNotifier : IAccountRecoveryNotifier
 
     public List<string> PasswordChanged { get; } = [];
 
+    public List<(string Email, string InvitedBy, string Token)> StaffInvitations { get; } = [];
+
+    public Task SendStaffInvitationAsync(
+        string email, string firstName, string invitedBy, string token, CancellationToken cancellationToken)
+    {
+        StaffInvitations.Add((email, invitedBy, token));
+        return Task.CompletedTask;
+    }
+
     public Task SendEmailVerificationAsync(
         string email, string firstName, string token, CancellationToken cancellationToken)
     {

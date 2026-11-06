@@ -95,5 +95,7 @@ export function adminNav(counts?: {
     // No badge: promo codes are not a queue. A count here would imply something is
     // waiting on staff when nothing is.
     { href: "/admin/promo-codes", label: "Promo codes", icon: <TagIcon /> },
+    // Super administrators only act on it; everyone else sees why on the page.
+    { href: "/admin/staff", label: "Staff", icon: <PersonIcon /> },
   ];
 }

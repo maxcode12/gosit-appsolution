@@ -13,6 +13,7 @@ public static class AuthorizationPolicies
     public const string CareRequesterOnly = "CareRequesterOnly";
     public const string CaregiverOnly = "CaregiverOnly";
     public const string AdminOnly = "AdminOnly";
+    public const string SuperAdminOnly = "SuperAdminOnly";
 
     public static AuthorizationOptions AddGoSitPolicies(this AuthorizationOptions options)
     {
@@ -24,6 +25,13 @@ public static class AuthorizationPolicies
 
         options.AddPolicy(AdminOnly, policy =>
             policy.RequireAuthenticatedUser().RequireRole(nameof(UserRole.Admin)));
+
+        // Creating and managing other staff. Stricter than AdminOnly on purpose: ordinary
+        // staff review documents and moderate; only a super administrator can add people.
+        options.AddPolicy(SuperAdminOnly, policy =>
+            policy.RequireAuthenticatedUser()
+                .RequireRole(nameof(UserRole.Admin))
+                .RequireClaim(GoSit.Infrastructure.Security.JwtTokenService.SuperAdminClaim, "true"));
 
         // Anything not explicitly marked [AllowAnonymous] requires a valid token.
         options.FallbackPolicy = new AuthorizationPolicyBuilder()

@@ -78,5 +78,12 @@ public sealed class UserRepository(GoSitDbContext context) : IUserRepository
     public Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken) =>
         context.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
 
+    public async Task<IReadOnlyList<User>> ListAdministratorsAsync(CancellationToken cancellationToken) =>
+        await context.Users
+            .AsNoTracking()
+            .Where(u => u.Role == UserRole.Admin)
+            .OrderBy(u => u.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
     public void Add(User user) => context.Users.Add(user);
 }

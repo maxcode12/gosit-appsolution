@@ -31,6 +31,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.LastName).IsRequired().HasMaxLength(100);
 
         builder.Property(u => u.Role).IsRequired().HasConversion<int>();
+        builder.Property(u => u.IsSuperAdmin).IsRequired().HasDefaultValue(false);
         builder.Property(u => u.Status).IsRequired().HasConversion<int>();
 
         builder.Property(u => u.EmailVerified).IsRequired();

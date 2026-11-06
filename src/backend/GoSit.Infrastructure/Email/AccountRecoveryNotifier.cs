@@ -80,6 +80,31 @@ public sealed class AccountRecoveryNotifier(
             cancellationToken);
     }
 
+    public Task SendStaffInvitationAsync(
+        string email, string firstName, string invitedBy, string token, CancellationToken cancellationToken)
+    {
+        var link = $"{BaseUrl}/reset-password?token={WebUtility.UrlEncode(token)}";
+        var adminUrl = webApp.Value.AdminBaseUrl.TrimEnd('/');
+
+        var body =
+            $"{invitedBy} has added you to the GoSit team. Choose a password to activate your "
+            + "staff account."
+            + (adminUrl.Length > 0 ? $" Then sign in at {adminUrl}." : string.Empty);
+
+        const string footnote =
+            "This link works for three days and can only be used once. If you were not "
+            + "expecting this, ignore this email and no account will be usable.";
+
+        return SendAsync(
+            new EmailMessage(
+                email,
+                firstName,
+                "You have been added to the GoSit team",
+                Layout("Welcome to the GoSit team", firstName, body, link, "Choose a password", footnote),
+                Text("Welcome to the GoSit team", firstName, body, link, footnote)),
+            cancellationToken);
+    }
+
     /// <summary>
     /// Sent after the fact, and not optional.
     ///

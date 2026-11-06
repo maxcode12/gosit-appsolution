@@ -45,5 +45,8 @@ public interface IUserRepository
 
     Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken);
 
+    /// <summary>Every staff account, oldest first.</summary>
+    Task<IReadOnlyList<User>> ListAdministratorsAsync(CancellationToken cancellationToken);
+
     void Add(User user);
 }

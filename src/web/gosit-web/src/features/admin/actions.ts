@@ -519,3 +519,40 @@ export async function closeEnquiryAction(
 
   return { done: true };
 }
+
+/**
+ * Adds a staff member, by a super administrator.
+ *
+ * The new person is emailed a link to choose their own password, so nothing here ever
+ * handles one. The API refuses anyone who is not a super administrator, so hiding the form
+ * from everyone else is courtesy, not security.
+ */
+export async function inviteStaffAction(
+  _previous: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
+  const text = (key: string) => String(formData.get(key) ?? "").trim();
+
+  try {
+    await apiFetch("/api/v1/admin/staff", {
+      method: "POST",
+      body: { email: text("email"), firstName: text("firstName"), lastName: text("lastName") },
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 400) {
+      const first = Object.values(error.problem?.errors ?? {}).flat()[0];
+
+      return { error: first ?? "Check the details and try again." };
+    }
+
+    if (error instanceof ApiError && error.status === 403) {
+      return { error: "Only a super administrator can add staff." };
+    }
+
+    return toState(error, "We could not add this person.");
+  }
+
+  revalidatePath("/admin/staff");
+
+  return { done: true };
+}

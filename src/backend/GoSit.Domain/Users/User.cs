@@ -29,6 +29,13 @@ public sealed class User : Entity
 
     public UserRole Role { get; private set; }
 
+    /// <summary>
+    /// A staff account that may also create and manage other staff accounts. Only ever true
+    /// for an <see cref="UserRole.Admin"/>. The bootstrap administrator has it; staff invited
+    /// by a super administrator do not, so one compromised ordinary account cannot mint more.
+    /// </summary>
+    public bool IsSuperAdmin { get; private set; }
+
     public UserStatus Status { get; private set; }
 
     public bool EmailVerified { get; private set; }
@@ -195,6 +202,27 @@ public sealed class User : Entity
         string passwordHash,
         string firstName,
         string lastName,
+        DateTime utcNow) =>
+        ProvisionStaffAccount(email, passwordHash, firstName, lastName, isSuperAdmin: true, utcNow);
+
+    /// <summary>
+    /// Provisions an ordinary staff account, as invited by a super administrator. Staff can
+    /// review and approve; they cannot create other staff.
+    /// </summary>
+    public static User ProvisionStaff(
+        string email,
+        string passwordHash,
+        string firstName,
+        string lastName,
+        DateTime utcNow) =>
+        ProvisionStaffAccount(email, passwordHash, firstName, lastName, isSuperAdmin: false, utcNow);
+
+    private static User ProvisionStaffAccount(
+        string email,
+        string passwordHash,
+        string firstName,
+        string lastName,
+        bool isSuperAdmin,
         DateTime utcNow)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -220,6 +248,7 @@ public sealed class User : Entity
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
             Role = UserRole.Admin,
+            IsSuperAdmin = isSuperAdmin,
             Status = UserStatus.Active,
             EmailVerified = true,
             CreatedAtUtc = utcNow,
